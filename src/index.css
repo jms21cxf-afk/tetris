@@ -9,6 +9,17 @@
 html {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  html,
+  body,
+  #root {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
 }
 
 body {
@@ -23,6 +34,13 @@ body {
   overscroll-behavior: none;
   user-select: none;
   -webkit-user-select: none;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  body {
+    align-items: stretch;
+  }
 }
 
 #root {

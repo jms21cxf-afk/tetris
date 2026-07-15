@@ -305,6 +305,107 @@
     justify-content: flex-start;
   }
 
+  .app.mobile {
+    --touch-height: 7.5rem;
+    --header-height: 2.25rem;
+    --title-height: 2rem;
+    --vertical-gap: 0.5rem;
+    --cell-size: min(
+      calc((100vw - 1.5rem - 6px) / 10),
+      calc(
+        (100dvh - var(--touch-height) - var(--header-height) - var(--title-height) -
+          var(--vertical-gap) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 6px) /
+          20
+      )
+    );
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    padding: max(0.35rem, env(safe-area-inset-top)) 0.75rem
+      max(0.35rem, env(safe-area-inset-bottom));
+    gap: var(--vertical-gap);
+    justify-content: flex-start;
+  }
+
+  .app.mobile.playing {
+    --title-height: 0rem;
+    --header-height: 2rem;
+  }
+
+  .app.mobile .title {
+    font-size: 1.4rem;
+    letter-spacing: 0.25em;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .app.mobile .mobile-header {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    max-width: calc(var(--cell-size) * 10 + 6px);
+  }
+
+  .app.mobile .game-container {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .app.mobile .game-board-wrapper {
+    flex-shrink: 0;
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .app.mobile .touch-controls {
+    flex-shrink: 0;
+    margin-top: 0;
+    max-width: calc(var(--cell-size) * 10 + 6px);
+    gap: 0.35rem;
+  }
+
+  .app.mobile .touch-btn {
+    height: 2.75rem;
+    max-width: none;
+    font-size: 1.15rem;
+    border-radius: 10px;
+  }
+
+  .app.mobile .touch-row.top {
+    margin-bottom: 0;
+  }
+
+  .game-info.compact {
+    flex-direction: row;
+    gap: 0.65rem;
+    align-items: center;
+  }
+
+  .stat-inline {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+    white-space: nowrap;
+  }
+
+  .game-info.compact .stat-label {
+    margin-bottom: 0;
+    font-size: 0.62rem;
+  }
+
+  .game-info.compact .stat-value {
+    font-size: 0.85rem;
+  }
+
+  .next-piece.compact .next-label {
+    font-size: 0.62rem;
+  }
+
+  .next-piece.compact .next-piece-grid .cell {
+    width: calc(var(--cell-size) * 0.55);
+    height: calc(var(--cell-size) * 0.55);
+  }
+
   .title {
     font-size: 1.6rem;
     letter-spacing: 0.3em;
@@ -320,6 +421,10 @@
     font-size: 1.5rem;
   }
 
+  .overlay-text.menu-text {
+    font-size: 1.75rem;
+  }
+
   .start-btn {
     padding: 0.75rem 1.5rem;
     font-size: 1rem;
@@ -327,20 +432,16 @@
 }
 
 @media (max-width: 380px) {
+  .app.mobile {
+    --touch-height: 7rem;
+  }
+
   .app {
     --cell-size: calc((100vw - 2rem - 6px) / 10);
   }
 
   .touch-btn {
-    height: 50px;
-    font-size: 1.2rem;
-  }
-
-  .mobile-header .game-info {
-    gap: 0.75rem;
-  }
-
-  .mobile-header .stat-value {
-    font-size: 1rem;
+    height: 2.5rem;
+    font-size: 1.05rem;
   }
 }

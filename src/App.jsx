@@ -39,12 +39,14 @@ function App() {
   const showTouchControls = isPlaying && !gameOver
 
   return (
-    <div className="app">
-      <h1 className="title">TETRIS</h1>
+    <div
+      className={`app${isMobile ? ' mobile' : ''}${isMobile && isPlaying ? ' playing' : ''}`}
+    >
+      {(!isMobile || !isPlaying) && <h1 className="title">TETRIS</h1>}
 
       {isMobile && isPlaying && (
         <div className="mobile-header">
-          <GameInfo score={score} level={level} lines={lines} />
+          <GameInfo score={score} level={level} lines={lines} compact />
           <NextPiece piece={nextPiece} compact />
         </div>
       )}
