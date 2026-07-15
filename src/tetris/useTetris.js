@@ -16,11 +16,14 @@ import {
 } from './gameLogic'
 
 export function useTetris() {
+  const initialHighScore = loadHighScore()
   const [gameState, setGameState] = useState(createMenuState)
-  const [highScore, setHighScore] = useState(loadHighScore)
+  const [highScore, setHighScore] = useState(initialHighScore)
   const [isNewRecord, setIsNewRecord] = useState(false)
-  const [muted, setMutedState] = useState(loadMuted)
+  const [muted, setMutedState] = useState(() => loadMuted())
   const gameStateRef = useRef(gameState)
+  const highScoreRef = useRef(initialHighScore)
+  const beatRecordThisGameRef = useRef(false)
   const prevGameOverRef = useRef(false)
   const prevLevelRef = useRef(1)
 
@@ -29,8 +32,24 @@ export function useTetris() {
   }, [gameState])
 
   useEffect(() => {
+    highScoreRef.current = highScore
+  }, [highScore])
+
+  useEffect(() => {
     setMuted(muted)
   }, [muted])
+
+  const saveIfBest = useCallback((score) => {
+    if (score <= 0 || score <= highScoreRef.current) {
+      return false
+    }
+
+    highScoreRef.current = score
+    setHighScore(score)
+    saveHighScore(score)
+    beatRecordThisGameRef.current = true
+    return true
+  }, [])
 
   const lockAndSpawn = useCallback((state, piece) => {
     const { board, linesCleared } = lockPiece(state.board, piece)
@@ -156,16 +175,22 @@ export function useTetris() {
     initAudio()
     prevGameOverRef.current = false
     prevLevelRef.current = 1
+    beatRecordThisGameRef.current = false
     setIsNewRecord(false)
     setGameState(beginGame())
   }, [])
 
   const quitGame = useCallback(() => {
+    const { score, isPlaying, gameOver } = gameStateRef.current
+    if (isPlaying && !gameOver) {
+      saveIfBest(score)
+    }
+
     prevGameOverRef.current = false
     prevLevelRef.current = 1
     setIsNewRecord(false)
     setGameState(createMenuState())
-  }, [])
+  }, [saveIfBest])
 
   const actions = useRef({
     moveLeft,
@@ -213,20 +238,25 @@ export function useTetris() {
   }, [gameState.isPlaying, gameState.isPaused, gameState.gameOver, gameState.level, tick])
 
   useEffect(() => {
-    if (gameState.gameOver && !prevGameOverRef.current) {
-      const isRecord = gameState.score > highScore
+    if (gameState.isPlaying && !gameState.gameOver && gameState.score > highScoreRef.current) {
+      saveIfBest(gameState.score)
+    }
+  }, [gameState.score, gameState.isPlaying, gameState.gameOver, saveIfBest])
 
-      if (isRecord) {
-        sounds.celebrate()
-        setHighScore(gameState.score)
-        saveHighScore(gameState.score)
+  useEffect(() => {
+    if (gameState.gameOver && !prevGameOverRef.current) {
+      saveIfBest(gameState.score)
+
+      if (beatRecordThisGameRef.current) {
         setIsNewRecord(true)
+        sounds.celebrate()
+        beatRecordThisGameRef.current = false
       } else {
         sounds.gameOver()
       }
     }
     prevGameOverRef.current = gameState.gameOver
-  }, [gameState.gameOver, gameState.score, highScore])
+  }, [gameState.gameOver, gameState.score, saveIfBest])
 
   useEffect(() => {
     if (gameState.level > prevLevelRef.current && gameState.isPlaying) {

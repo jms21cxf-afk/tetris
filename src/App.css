@@ -424,7 +424,7 @@
 
   .app.mobile.playing {
     --title-height: 0rem;
-    --header-height: 2rem;
+    --header-height: 2.6rem;
   }
 
   .app.mobile .title {
@@ -438,6 +438,32 @@
     flex-shrink: 0;
     margin-bottom: 0;
     max-width: calc(var(--cell-size) * 10 + 6px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .mobile-stats-block {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-best-line {
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    color: #f0a000;
+    font-weight: 600;
+  }
+
+  .game-info.menu-only .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .overlay-subtext.menu-high-score {
+    color: #f0a000;
+    font-size: 1.05rem;
   }
 
   .app.mobile .game-container {

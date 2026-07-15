@@ -1,5 +1,6 @@
 import { useTetris } from './tetris/useTetris'
 import { useIsMobile } from './hooks/useIsMobile'
+import { formatHighScore } from './tetris/formatScore'
 import Board from './components/Board'
 import NextPiece from './components/NextPiece'
 import GameInfo from './components/GameInfo'
@@ -37,6 +38,8 @@ function App() {
     toggleMute,
   } = useTetris()
 
+  const isMenu = !isPlaying && !gameOver
+
   const handleStart = () => {
     initAudio()
     startGame()
@@ -59,13 +62,23 @@ function App() {
 
       {(!isMobile || !isPlaying) && <h1 className="title">TETRIS</h1>}
 
-      {isMobile && !isPlaying && (
-        <p className="mobile-high-score">최고기록 {highScore.toLocaleString()}</p>
+      {isMobile && isMenu && (
+        <p className="mobile-high-score">최고기록 {formatHighScore(highScore)}</p>
       )}
 
       {isMobile && isPlaying && (
         <div className="mobile-header">
-          <GameInfo score={score} level={level} lines={lines} highScore={highScore} compact />
+          <div className="mobile-stats-block">
+            <GameInfo
+              score={score}
+              level={level}
+              lines={lines}
+              highScore={highScore}
+              compact
+              showHighScore={false}
+            />
+            <p className="mobile-best-line">최고기록 {formatHighScore(highScore)}</p>
+          </div>
           <NextPiece piece={nextPiece} compact />
         </div>
       )}
@@ -78,6 +91,7 @@ function App() {
               level={level}
               lines={lines}
               highScore={highScore}
+              menuOnly={isMenu}
             />
           </aside>
         )}
@@ -89,14 +103,12 @@ function App() {
             ghostPosition={ghostPosition}
           />
 
-          {!isPlaying && !gameOver && (
+          {isMenu && (
             <div className="overlay menu">
               <p className="overlay-text menu-text">TETRIS</p>
-              {!isMobile && (
-                <p className="overlay-subtext">
-                  최고기록 {highScore.toLocaleString()}
-                </p>
-              )}
+              <p className="overlay-subtext menu-high-score">
+                최고기록 {formatHighScore(highScore)}
+              </p>
               <button type="button" className="start-btn" onClick={handleStart}>
                 시작하기
               </button>
@@ -117,6 +129,7 @@ function App() {
                 <>
                   <p className="overlay-text">GAME OVER</p>
                   <p className="overlay-subtext">점수 {score.toLocaleString()}</p>
+                  <p className="overlay-subtext">최고기록 {formatHighScore(highScore)}</p>
                 </>
               )}
               <div className="overlay-actions">
