@@ -1,6 +1,9 @@
+import { useCallback, useEffect, useRef } from 'react'
 import { useTetris } from './tetris/useTetris'
 import { useIsMobile } from './hooks/useIsMobile'
+import { useLeaderboard } from './hooks/useLeaderboard'
 import { formatHighScore } from './tetris/formatScore'
+import { loadNickname } from './tetris/storage'
 import Board from './components/Board'
 import NextPiece from './components/NextPiece'
 import GameInfo from './components/GameInfo'
@@ -8,11 +11,22 @@ import Controls from './components/Controls'
 import TouchControls from './components/TouchControls'
 import MuteButton from './components/MuteButton'
 import Fireworks from './components/Fireworks'
+import Leaderboard from './components/Leaderboard'
+import NicknameInput from './components/NicknameInput'
 import { initAudio } from './tetris/sounds'
 import './App.css'
 
 function App() {
   const isMobile = useIsMobile()
+  const submitScoreRef = useRef(null)
+
+  const handleScoreRecord = useCallback((recordScore) => {
+    const nickname = loadNickname().trim()
+    if (nickname.length >= 2) {
+      submitScoreRef.current?.(nickname, recordScore)
+    }
+  }, [])
+
   const {
     board,
     currentPiece,
@@ -36,13 +50,30 @@ function App() {
     hardDrop,
     togglePause,
     toggleMute,
-  } = useTetris()
+  } = useTetris({ onScoreRecord: handleScoreRecord })
 
   const isMenu = !isPlaying && !gameOver
+
+  const {
+    scores,
+    loading: leaderboardLoading,
+    unavailable: leaderboardUnavailable,
+    submitScore,
+    refresh: refreshLeaderboard,
+  } = useLeaderboard(isMenu || gameOver)
+
+  useEffect(() => {
+    submitScoreRef.current = submitScore
+  }, [submitScore])
 
   const handleStart = () => {
     initAudio()
     startGame()
+  }
+
+  const handleQuit = () => {
+    quitGame()
+    refreshLeaderboard()
   }
 
   const handleToggleMute = () => {
@@ -51,6 +82,7 @@ function App() {
   }
 
   const showTouchControls = isPlaying && !gameOver
+  const hasNickname = loadNickname().trim().length >= 2
 
   return (
     <div
@@ -63,7 +95,19 @@ function App() {
       {(!isMobile || !isPlaying) && <h1 className="title">TETRIS</h1>}
 
       {isMobile && isMenu && (
-        <p className="mobile-high-score">최고기록 {formatHighScore(highScore)}</p>
+        <p className="mobile-high-score">내 최고기록 {formatHighScore(highScore)}</p>
+      )}
+
+      {isMobile && isMenu && (
+        <div className="mobile-menu-extras">
+          <NicknameInput compact />
+          <Leaderboard
+            scores={scores}
+            loading={leaderboardLoading}
+            unavailable={leaderboardUnavailable}
+            compact
+          />
+        </div>
       )}
 
       {isMobile && isPlaying && (
@@ -77,7 +121,7 @@ function App() {
               compact
               showHighScore={false}
             />
-            <p className="mobile-best-line">최고기록 {formatHighScore(highScore)}</p>
+            <p className="mobile-best-line">내 최고 {formatHighScore(highScore)}</p>
           </div>
           <NextPiece piece={nextPiece} compact />
         </div>
@@ -93,6 +137,16 @@ function App() {
               highScore={highScore}
               menuOnly={isMenu}
             />
+            {isMenu && (
+              <>
+                <NicknameInput />
+                <Leaderboard
+                  scores={scores}
+                  loading={leaderboardLoading}
+                  unavailable={leaderboardUnavailable}
+                />
+              </>
+            )}
           </aside>
         )}
 
@@ -107,7 +161,7 @@ function App() {
             <div className="overlay menu">
               <p className="overlay-text menu-text">TETRIS</p>
               <p className="overlay-subtext menu-high-score">
-                최고기록 {formatHighScore(highScore)}
+                내 최고기록 {formatHighScore(highScore)}
               </p>
               <button type="button" className="start-btn" onClick={handleStart}>
                 시작하기
@@ -124,19 +178,22 @@ function App() {
                   <p className="overlay-subtext record-score">
                     {score.toLocaleString()}점
                   </p>
+                  {hasNickname && (
+                    <p className="overlay-subtext">글로벌 랭킹에 등록됐어요!</p>
+                  )}
                 </>
               ) : (
                 <>
                   <p className="overlay-text">GAME OVER</p>
                   <p className="overlay-subtext">점수 {score.toLocaleString()}</p>
-                  <p className="overlay-subtext">최고기록 {formatHighScore(highScore)}</p>
+                  <p className="overlay-subtext">내 최고 {formatHighScore(highScore)}</p>
                 </>
               )}
               <div className="overlay-actions">
                 <button type="button" className="start-btn" onClick={handleStart}>
                   다시 시작
                 </button>
-                <button type="button" className="secondary-btn" onClick={quitGame}>
+                <button type="button" className="secondary-btn" onClick={handleQuit}>
                   나가기
                 </button>
               </div>
@@ -150,7 +207,7 @@ function App() {
                 <button type="button" className="start-btn" onClick={togglePause}>
                   계속하기
                 </button>
-                <button type="button" className="secondary-btn" onClick={quitGame}>
+                <button type="button" className="secondary-btn" onClick={handleQuit}>
                   나가기
                 </button>
               </div>
@@ -163,7 +220,7 @@ function App() {
             <NextPiece piece={nextPiece} />
             <Controls
               onStart={handleStart}
-              onQuit={quitGame}
+              onQuit={handleQuit}
               isPlaying={isPlaying}
               gameOver={gameOver}
               isPaused={isPaused}

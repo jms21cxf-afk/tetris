@@ -339,6 +339,110 @@
   margin-top: 0.5rem;
 }
 
+/* 닉네임 & 리더보드 */
+.nickname-input h3,
+.leaderboard h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+.nickname-row {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.nickname-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #1a1a2e;
+  color: #e8e8f0;
+  font-size: 0.85rem;
+}
+
+.nickname-save-btn {
+  padding: 0.4rem 0.65rem;
+  border: none;
+  border-radius: 6px;
+  background: #00f0f0;
+  color: #0f0f1a;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.nickname-hint,
+.nickname-saved,
+.leaderboard-msg {
+  font-size: 0.72rem;
+  color: #888;
+  margin-top: 0.35rem;
+}
+
+.nickname-saved {
+  color: #00f000;
+}
+
+.leaderboard-list {
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.leaderboard-list li {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr auto;
+  gap: 0.35rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.leaderboard-list .rank {
+  color: #888;
+  font-weight: 700;
+}
+
+.leaderboard-list .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-list .score {
+  color: #f0a000;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard.compact h3,
+.nickname-input.compact h3 {
+  font-size: 0.65rem;
+  margin-bottom: 0.35rem;
+}
+
+.leaderboard.compact .leaderboard-list {
+  font-size: 0.72rem;
+}
+
+.mobile-menu-extras {
+  width: 100%;
+  max-width: calc(var(--cell-size) * 10 + 6px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 0.35rem;
+  flex-shrink: 0;
+}
+
+.sidebar.left {
+  max-height: calc(100dvh - 4rem);
+  overflow-y: auto;
+}
+
 /* 모바일 터치 컨트롤 */
 .touch-controls {
   width: 100%;
@@ -404,12 +508,14 @@
     --touch-height: 7.5rem;
     --header-height: 2.25rem;
     --title-height: 2rem;
-    --vertical-gap: 0.5rem;
+    --menu-extras-height: 7rem;
+    --vertical-gap: 0.35rem;
     --cell-size: min(
       calc((100vw - 1.5rem - 6px) / 10),
       calc(
         (100dvh - var(--touch-height) - var(--header-height) - var(--title-height) -
-          var(--vertical-gap) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 6px) /
+          var(--menu-extras-height) - var(--vertical-gap) - env(safe-area-inset-top) -
+          env(safe-area-inset-bottom) - 6px) /
           20
       )
     );
@@ -425,6 +531,7 @@
   .app.mobile.playing {
     --title-height: 0rem;
     --header-height: 2.6rem;
+    --menu-extras-height: 0rem;
   }
 
   .app.mobile .title {

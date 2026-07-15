@@ -1,5 +1,6 @@
 const HIGH_SCORE_KEY = 'tetris-high-score'
 const MUTE_KEY = 'tetris-muted'
+const NICKNAME_KEY = 'tetris-nickname'
 
 export function loadHighScore() {
   try {
@@ -30,6 +31,22 @@ export function loadMuted() {
 export function saveMuted(muted) {
   try {
     localStorage.setItem(MUTE_KEY, String(muted))
+  } catch {
+    // ignore
+  }
+}
+
+export function loadNickname() {
+  try {
+    return localStorage.getItem(NICKNAME_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+export function saveNickname(nickname) {
+  try {
+    localStorage.setItem(NICKNAME_KEY, nickname)
   } catch {
     // ignore
   }
