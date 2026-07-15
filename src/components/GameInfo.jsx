@@ -1,4 +1,4 @@
-export default function GameInfo({ score, level, lines, compact = false }) {
+export default function GameInfo({ score, level, lines, highScore, compact = false }) {
   if (compact) {
     return (
       <div className="game-info compact">
@@ -31,6 +31,10 @@ export default function GameInfo({ score, level, lines, compact = false }) {
       <div className="stat">
         <span className="stat-label">줄</span>
         <span className="stat-value">{lines}</span>
+      </div>
+      <div className="stat">
+        <span className="stat-label">최고기록</span>
+        <span className="stat-value high-score">{highScore.toLocaleString()}</span>
       </div>
     </div>
   )

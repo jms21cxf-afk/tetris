@@ -169,6 +169,101 @@
   color: #f0f000;
 }
 
+.stat-value.high-score {
+  color: #f0a000;
+}
+
+.mute-btn {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 10;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid #444;
+  border-radius: 50%;
+  background: #2a2a3e;
+  font-size: 1.1rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.mute-btn:active {
+  transform: scale(0.92);
+  background: #3a3a5e;
+}
+
+.mobile-high-score {
+  font-size: 0.85rem;
+  color: #f0a000;
+  margin-bottom: 0.35rem;
+  flex-shrink: 0;
+}
+
+.overlay-subtext {
+  font-size: 1rem;
+  color: #ccc;
+}
+
+.overlay-record {
+  font-size: 1.1rem;
+  color: #f0a000;
+  font-weight: 700;
+}
+
+.fireworks-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.overlay.record {
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 51;
+}
+
+.overlay.record .record-title {
+  color: #f0a000;
+  text-shadow: 0 0 20px rgba(240, 160, 0, 0.8);
+  animation: record-pop 0.5s ease-out;
+  font-size: 1.6rem;
+  letter-spacing: 0.15em;
+}
+
+.overlay-record-msg {
+  font-size: 1.05rem;
+  color: #00f0f0;
+  text-align: center;
+  line-height: 1.5;
+  animation: record-pop 0.6s ease-out 0.1s both;
+}
+
+.overlay-subtext.record-score {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  animation: record-pop 0.6s ease-out 0.2s both;
+}
+
+@keyframes record-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .overlay {
   position: absolute;
   inset: 0;

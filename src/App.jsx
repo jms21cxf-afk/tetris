@@ -5,6 +5,8 @@ import NextPiece from './components/NextPiece'
 import GameInfo from './components/GameInfo'
 import Controls from './components/Controls'
 import TouchControls from './components/TouchControls'
+import MuteButton from './components/MuteButton'
+import Fireworks from './components/Fireworks'
 import { initAudio } from './tetris/sounds'
 import './App.css'
 
@@ -18,6 +20,9 @@ function App() {
     score,
     level,
     lines,
+    highScore,
+    isNewRecord,
+    muted,
     gameOver,
     isPaused,
     isPlaying,
@@ -29,11 +34,17 @@ function App() {
     rotate,
     hardDrop,
     togglePause,
+    toggleMute,
   } = useTetris()
 
   const handleStart = () => {
     initAudio()
     startGame()
+  }
+
+  const handleToggleMute = () => {
+    initAudio()
+    toggleMute()
   }
 
   const showTouchControls = isPlaying && !gameOver
@@ -42,11 +53,19 @@ function App() {
     <div
       className={`app${isMobile ? ' mobile' : ''}${isMobile && isPlaying ? ' playing' : ''}`}
     >
+      <MuteButton muted={muted} onToggle={handleToggleMute} />
+
+      {gameOver && isNewRecord && <Fireworks active />}
+
       {(!isMobile || !isPlaying) && <h1 className="title">TETRIS</h1>}
+
+      {isMobile && !isPlaying && (
+        <p className="mobile-high-score">최고기록 {highScore.toLocaleString()}</p>
+      )}
 
       {isMobile && isPlaying && (
         <div className="mobile-header">
-          <GameInfo score={score} level={level} lines={lines} compact />
+          <GameInfo score={score} level={level} lines={lines} highScore={highScore} compact />
           <NextPiece piece={nextPiece} compact />
         </div>
       )}
@@ -54,7 +73,12 @@ function App() {
       <div className="game-container">
         {!isMobile && (
           <aside className="sidebar left">
-            <GameInfo score={score} level={level} lines={lines} />
+            <GameInfo
+              score={score}
+              level={level}
+              lines={lines}
+              highScore={highScore}
+            />
           </aside>
         )}
 
@@ -68,6 +92,11 @@ function App() {
           {!isPlaying && !gameOver && (
             <div className="overlay menu">
               <p className="overlay-text menu-text">TETRIS</p>
+              {!isMobile && (
+                <p className="overlay-subtext">
+                  최고기록 {highScore.toLocaleString()}
+                </p>
+              )}
               <button type="button" className="start-btn" onClick={handleStart}>
                 시작하기
               </button>
@@ -75,8 +104,21 @@ function App() {
           )}
 
           {gameOver && (
-            <div className="overlay">
-              <p className="overlay-text">GAME OVER</p>
+            <div className={`overlay${isNewRecord ? ' record' : ''}`}>
+              {isNewRecord ? (
+                <>
+                  <p className="overlay-text record-title">🎉 NEW RECORD!</p>
+                  <p className="overlay-record-msg">축하합니다! 최고기록을 경신했어요!</p>
+                  <p className="overlay-subtext record-score">
+                    {score.toLocaleString()}점
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="overlay-text">GAME OVER</p>
+                  <p className="overlay-subtext">점수 {score.toLocaleString()}</p>
+                </>
+              )}
               <div className="overlay-actions">
                 <button type="button" className="start-btn" onClick={handleStart}>
                   다시 시작

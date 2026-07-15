@@ -31,4 +31,6 @@ export const KEY_BINDINGS = {
   ' ': 'hardDrop',
   p: 'togglePause',
   P: 'togglePause',
+  m: 'toggleMute',
+  M: 'toggleMute',
 }

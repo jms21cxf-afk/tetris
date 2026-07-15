@@ -1,4 +1,7 @@
+import { loadMuted, saveMuted } from './storage'
+
 let audioContext = null
+let muted = loadMuted()
 
 function getContext() {
   if (!audioContext) {
@@ -14,7 +17,23 @@ export function initAudio() {
   }
 }
 
+export function isMuted() {
+  return muted
+}
+
+export function setMuted(value) {
+  muted = value
+  saveMuted(value)
+}
+
+export function toggleMuted() {
+  setMuted(!muted)
+  return muted
+}
+
 function playTone(frequency, duration, type = 'square', volume = 0.1, startTime = 0) {
+  if (muted) return
+
   try {
     const ctx = getContext()
     const time = ctx.currentTime + startTime
@@ -78,5 +97,12 @@ export const sounds = {
     playTone(220, 0.15, 'triangle', 0.1)
     playTone(165, 0.15, 'triangle', 0.1, 0.15)
     playTone(110, 0.3, 'triangle', 0.1, 0.3)
+  },
+
+  celebrate() {
+    const notes = [523, 659, 784, 988, 1175]
+    notes.forEach((note, i) => {
+      playTone(note, 0.18, 'square', 0.09, i * 0.12)
+    })
   },
 }

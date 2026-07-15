@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { KEY_BINDINGS } from './constants'
 import { getGhostPosition } from './board'
-import { initAudio, sounds } from './sounds'
+import { initAudio, sounds, toggleMuted, setMuted } from './sounds'
+import { loadHighScore, saveHighScore, loadMuted } from './storage'
 import {
   createMenuState,
   beginGame,
@@ -16,6 +17,9 @@ import {
 
 export function useTetris() {
   const [gameState, setGameState] = useState(createMenuState)
+  const [highScore, setHighScore] = useState(loadHighScore)
+  const [isNewRecord, setIsNewRecord] = useState(false)
+  const [muted, setMutedState] = useState(loadMuted)
   const gameStateRef = useRef(gameState)
   const prevGameOverRef = useRef(false)
   const prevLevelRef = useRef(1)
@@ -23,6 +27,10 @@ export function useTetris() {
   useEffect(() => {
     gameStateRef.current = gameState
   }, [gameState])
+
+  useEffect(() => {
+    setMuted(muted)
+  }, [muted])
 
   const lockAndSpawn = useCallback((state, piece) => {
     const { board, linesCleared } = lockPiece(state.board, piece)
@@ -139,16 +147,23 @@ export function useTetris() {
     })
   }, [])
 
+  const toggleMute = useCallback(() => {
+    initAudio()
+    setMutedState(toggleMuted())
+  }, [])
+
   const startGame = useCallback(() => {
     initAudio()
     prevGameOverRef.current = false
     prevLevelRef.current = 1
+    setIsNewRecord(false)
     setGameState(beginGame())
   }, [])
 
   const quitGame = useCallback(() => {
     prevGameOverRef.current = false
     prevLevelRef.current = 1
+    setIsNewRecord(false)
     setGameState(createMenuState())
   }, [])
 
@@ -159,6 +174,7 @@ export function useTetris() {
     rotate,
     hardDrop: dropHard,
     togglePause,
+    toggleMute,
   })
 
   useEffect(() => {
@@ -169,8 +185,9 @@ export function useTetris() {
       rotate,
       hardDrop: dropHard,
       togglePause,
+      toggleMute,
     }
-  }, [moveLeft, moveRight, softDrop, rotate, dropHard, togglePause])
+  }, [moveLeft, moveRight, softDrop, rotate, dropHard, togglePause, toggleMute])
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -197,10 +214,19 @@ export function useTetris() {
 
   useEffect(() => {
     if (gameState.gameOver && !prevGameOverRef.current) {
-      sounds.gameOver()
+      const isRecord = gameState.score > highScore
+
+      if (isRecord) {
+        sounds.celebrate()
+        setHighScore(gameState.score)
+        saveHighScore(gameState.score)
+        setIsNewRecord(true)
+      } else {
+        sounds.gameOver()
+      }
     }
     prevGameOverRef.current = gameState.gameOver
-  }, [gameState.gameOver])
+  }, [gameState.gameOver, gameState.score, highScore])
 
   useEffect(() => {
     if (gameState.level > prevLevelRef.current && gameState.isPlaying) {
@@ -217,12 +243,16 @@ export function useTetris() {
   return {
     ...gameState,
     ghostPosition,
+    highScore,
+    isNewRecord,
+    muted,
     moveLeft,
     moveRight,
     softDrop,
     rotate,
     hardDrop: dropHard,
     togglePause,
+    toggleMute,
     startGame,
     quitGame,
   }

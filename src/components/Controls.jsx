@@ -14,6 +14,7 @@ export default function Controls({
         <li><kbd>↓</kbd> 소프트 드롭</li>
         <li><kbd>Space</kbd> 하드 드롭</li>
         <li><kbd>P</kbd> 일시정지</li>
+        <li><kbd>M</kbd> 음소거</li>
       </ul>
 
       {!isPlaying && !gameOver && (
