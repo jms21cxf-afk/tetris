@@ -1,0 +1,30 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0f0f1a;
+  color: #e8e8f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#root {
+  width: 100%;
+}
