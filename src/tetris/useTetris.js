@@ -229,6 +229,15 @@ export function useTetris({ onScoreRecord } = {}) {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
+      const target = event.target
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable
+      ) {
+        return
+      }
+
       const action = KEY_BINDINGS[event.key]
       if (!action) return
 
