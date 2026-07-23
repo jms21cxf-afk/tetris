@@ -26,15 +26,16 @@ export function useTetris({ onScoreRecord } = {}) {
   const beatRecordThisGameRef = useRef(false)
   const onScoreRecordRef = useRef(onScoreRecord)
   const prevGameOverRef = useRef(false)
-  const prevLevelRef = useRef(1)
   const flashTimerRef = useRef(null)
+  const levelFlashTimerRef = useRef(null)
   const [flashEvent, setFlashEvent] = useState(null)
 
   const showFlash = useCallback((event) => {
     if (flashTimerRef.current) {
       clearTimeout(flashTimerRef.current)
     }
-    setFlashEvent(event)
+    setFlashEvent(event ? { ...event, id: Date.now() } : null)
+    if (!event) return
     flashTimerRef.current = setTimeout(() => {
       setFlashEvent(null)
       flashTimerRef.current = null
@@ -44,6 +45,7 @@ export function useTetris({ onScoreRecord } = {}) {
   useEffect(() => {
     return () => {
       if (flashTimerRef.current) clearTimeout(flashTimerRef.current)
+      if (levelFlashTimerRef.current) clearTimeout(levelFlashTimerRef.current)
     }
   }, [])
 
@@ -88,7 +90,22 @@ export function useTetris({ onScoreRecord } = {}) {
     let nextState = { ...state, board, currentPiece: null }
 
     if (linesCleared > 0) {
+      const prevLevel = state.level
       nextState = applyLineClear(nextState, linesCleared)
+      // 레벨 업 연출은 줄 클리어 직후에 띄움(useEffect보다 모바일에서 안정적)
+      if (nextState.level > prevLevel) {
+        sounds.levelUp()
+        const newLevel = nextState.level
+        if (linesCleared === 4) {
+          if (levelFlashTimerRef.current) clearTimeout(levelFlashTimerRef.current)
+          levelFlashTimerRef.current = setTimeout(() => {
+            showFlash({ kind: 'level', level: newLevel })
+            levelFlashTimerRef.current = null
+          }, 1650)
+        } else {
+          showFlash({ kind: 'level', level: newLevel })
+        }
+      }
     }
 
     nextState = spawnNextPiece(nextState)
@@ -201,7 +218,6 @@ export function useTetris({ onScoreRecord } = {}) {
   const startGame = useCallback(() => {
     initAudio()
     prevGameOverRef.current = false
-    prevLevelRef.current = 1
     beatRecordThisGameRef.current = false
     setIsNewRecord(false)
     setGameState(beginGame())
@@ -222,7 +238,6 @@ export function useTetris({ onScoreRecord } = {}) {
     }
 
     prevGameOverRef.current = false
-    prevLevelRef.current = 1
     setIsNewRecord(false)
     setGameState(createMenuState())
   }, [saveIfBest, flushGlobalScore])
@@ -301,14 +316,6 @@ export function useTetris({ onScoreRecord } = {}) {
     }
     prevGameOverRef.current = gameState.gameOver
   }, [gameState.gameOver, gameState.score, saveIfBest, flushGlobalScore])
-
-  useEffect(() => {
-    if (gameState.level > prevLevelRef.current && gameState.isPlaying) {
-      sounds.levelUp()
-      showFlash({ kind: 'level', level: gameState.level })
-    }
-    prevLevelRef.current = gameState.level
-  }, [gameState.level, gameState.isPlaying, showFlash])
 
   const ghostPosition =
     gameState.currentPiece && !gameState.gameOver

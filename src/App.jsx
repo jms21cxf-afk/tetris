@@ -163,7 +163,7 @@ function App() {
             ghostPosition={ghostPosition}
           />
 
-          <GameFlashOverlay event={flashEvent} />
+          {!isMobile && <GameFlashOverlay event={flashEvent} />}
 
           {isMenu && (
             <div className="overlay menu">
@@ -236,6 +236,11 @@ function App() {
           </aside>
         )}
       </div>
+
+      {/* 모바일: 보드 밖 전체 화면에 팝업 (작은 보드·overflow에 가려지지 않도록) */}
+      {isMobile && isPlaying && (
+        <GameFlashOverlay event={flashEvent} fullscreen />
+      )}
 
       {isMobile && showTouchControls && (
         <TouchControls

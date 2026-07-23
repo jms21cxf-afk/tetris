@@ -101,6 +101,40 @@
   letter-spacing: 0.08em;
 }
 
+/* 폰: 보드 영역 밖 전체 화면 연출 */
+.game-flash-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(15, 15, 26, 0.45);
+}
+
+.game-flash-fullscreen.game-flash-level {
+  background: radial-gradient(
+      circle at 50% 45%,
+      rgba(0, 240, 240, 0.35) 0%,
+      rgba(15, 15, 26, 0.55) 55%,
+      rgba(15, 15, 26, 0.75) 100%
+    );
+}
+
+.game-flash-fullscreen.game-flash-tetris {
+  background: radial-gradient(
+      circle at 50% 45%,
+      rgba(240, 160, 0, 0.4) 0%,
+      rgba(15, 15, 26, 0.55) 55%,
+      rgba(15, 15, 26, 0.75) 100%
+    );
+}
+
+.game-flash-fullscreen .game-flash-title {
+  font-size: clamp(2rem, 11vw, 3rem);
+}
+
+.game-flash-fullscreen .game-flash-sub {
+  font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+}
+
 @keyframes game-flash-in {
   0% {
     opacity: 0;
