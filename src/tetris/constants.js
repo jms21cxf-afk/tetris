@@ -20,7 +20,8 @@ export const SCORE_TABLE = {
   4: 800,
 }
 
-export const LINES_PER_LEVEL = 10
+// 클래식(NES)은 10줄마다 레벨업. 시연·초보자는 5줄로 더 빨리 체감.
+export const LINES_PER_LEVEL = 5
 export const BASE_DROP_INTERVAL = 1000
 
 export const KEY_BINDINGS = {

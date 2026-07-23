@@ -77,20 +77,29 @@ export const sounds = {
   },
 
   lineClear(lines) {
+    if (lines === 4) {
+      this.tetrisClear()
+      return
+    }
     const notes = [262, 330, 392, 523]
     const count = Math.min(lines, 4)
     for (let i = 0; i < count; i++) {
       playTone(notes[i], 0.12, 'square', 0.09, i * 0.1)
     }
-    if (lines === 4) {
-      playTone(659, 0.2, 'square', 0.1, 0.4)
-    }
+  },
+
+  tetrisClear() {
+    const melody = [523, 659, 784, 988, 1175, 988]
+    melody.forEach((note, i) => {
+      playTone(note, 0.14, 'square', 0.1, i * 0.09)
+    })
   },
 
   levelUp() {
-    playTone(440, 0.1, 'square', 0.08)
-    playTone(554, 0.1, 'square', 0.08, 0.1)
-    playTone(659, 0.15, 'square', 0.08, 0.2)
+    const melody = [392, 523, 659, 784, 988, 784, 988]
+    melody.forEach((note, i) => {
+      playTone(note, 0.11, 'square', 0.1, i * 0.08)
+    })
   },
 
   gameOver() {

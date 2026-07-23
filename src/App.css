@@ -45,6 +45,80 @@
   border: 3px solid #333;
   background: #1a1a2e;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.game-board-wrapper.board-flash-level {
+  border-color: #00f0f0;
+  box-shadow: 0 0 36px rgba(0, 240, 240, 0.55);
+}
+
+.game-board-wrapper.board-flash-tetris {
+  border-color: #f0a000;
+  box-shadow: 0 0 36px rgba(240, 160, 0, 0.55);
+}
+
+.game-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: game-flash-in 1.6s ease forwards;
+}
+
+.game-flash-level {
+  background: radial-gradient(circle, rgba(0, 240, 240, 0.35) 0%, transparent 70%);
+}
+
+.game-flash-tetris {
+  background: radial-gradient(circle, rgba(240, 160, 0, 0.4) 0%, transparent 70%);
+}
+
+.game-flash-title {
+  font-size: clamp(1.6rem, 7vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 24px currentColor;
+  margin: 0;
+}
+
+.game-flash-level .game-flash-title {
+  color: #00f0f0;
+}
+
+.game-flash-tetris .game-flash-title {
+  color: #f0a000;
+}
+
+.game-flash-sub {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.08em;
+}
+
+@keyframes game-flash-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  28% {
+    transform: scale(1);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .board {

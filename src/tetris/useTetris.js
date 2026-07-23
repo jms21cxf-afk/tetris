@@ -27,6 +27,25 @@ export function useTetris({ onScoreRecord } = {}) {
   const onScoreRecordRef = useRef(onScoreRecord)
   const prevGameOverRef = useRef(false)
   const prevLevelRef = useRef(1)
+  const flashTimerRef = useRef(null)
+  const [flashEvent, setFlashEvent] = useState(null)
+
+  const showFlash = useCallback((event) => {
+    if (flashTimerRef.current) {
+      clearTimeout(flashTimerRef.current)
+    }
+    setFlashEvent(event)
+    flashTimerRef.current = setTimeout(() => {
+      setFlashEvent(null)
+      flashTimerRef.current = null
+    }, 1600)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     onScoreRecordRef.current = onScoreRecord
@@ -59,7 +78,10 @@ export function useTetris({ onScoreRecord } = {}) {
   const lockAndSpawn = useCallback((state, piece) => {
     const { board, linesCleared } = lockPiece(state.board, piece)
     sounds.lock()
-    if (linesCleared > 0) {
+    if (linesCleared === 4) {
+      sounds.tetrisClear()
+      showFlash({ kind: 'tetris' })
+    } else if (linesCleared > 0) {
       sounds.lineClear(linesCleared)
     }
 
@@ -71,7 +93,7 @@ export function useTetris({ onScoreRecord } = {}) {
 
     nextState = spawnNextPiece(nextState)
     return nextState
-  }, [])
+  }, [showFlash])
 
   const tick = useCallback(() => {
     setGameState((prev) => {
@@ -283,9 +305,10 @@ export function useTetris({ onScoreRecord } = {}) {
   useEffect(() => {
     if (gameState.level > prevLevelRef.current && gameState.isPlaying) {
       sounds.levelUp()
+      showFlash({ kind: 'level', level: gameState.level })
     }
     prevLevelRef.current = gameState.level
-  }, [gameState.level, gameState.isPlaying])
+  }, [gameState.level, gameState.isPlaying, showFlash])
 
   const ghostPosition =
     gameState.currentPiece && !gameState.gameOver
@@ -307,5 +330,6 @@ export function useTetris({ onScoreRecord } = {}) {
     toggleMute,
     startGame,
     quitGame,
+    flashEvent,
   }
 }

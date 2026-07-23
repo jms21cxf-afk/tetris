@@ -10,6 +10,7 @@ import GameInfo from './components/GameInfo'
 import Controls from './components/Controls'
 import TouchControls from './components/TouchControls'
 import MuteButton from './components/MuteButton'
+import GameFlashOverlay from './components/GameFlashOverlay'
 import Fireworks from './components/Fireworks'
 import Leaderboard from './components/Leaderboard'
 import NicknameInput from './components/NicknameInput'
@@ -50,6 +51,7 @@ function App() {
     hardDrop,
     togglePause,
     toggleMute,
+    flashEvent,
   } = useTetris({ onScoreRecord: handleScoreRecord })
 
   const isMenu = !isPlaying && !gameOver
@@ -150,12 +152,18 @@ function App() {
           </aside>
         )}
 
-        <main className="game-board-wrapper">
+        <main
+          className={`game-board-wrapper${
+            flashEvent?.kind === 'level' ? ' board-flash-level' : ''
+          }${flashEvent?.kind === 'tetris' ? ' board-flash-tetris' : ''}`}
+        >
           <Board
             board={board}
             currentPiece={currentPiece}
             ghostPosition={ghostPosition}
           />
+
+          <GameFlashOverlay event={flashEvent} />
 
           {isMenu && (
             <div className="overlay menu">
