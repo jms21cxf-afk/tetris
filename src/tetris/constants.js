@@ -24,6 +24,12 @@ export const SCORE_TABLE = {
 export const LINES_PER_LEVEL = 5
 export const BASE_DROP_INTERVAL = 1000
 
+/** 레벨 4부터 바닥에 랜덤 1칸 쌓임 */
+export const GARBAGE_MINO_FROM_LEVEL = 4
+
+/** 개발: npm run dev 후 ?devLevel=4 로 레벨 바로 시작 (배포 빌드에서는 무시) */
+export const DEV_START_LEVEL = Number(import.meta.env.VITE_DEV_START_LEVEL) || 0
+
 export const KEY_BINDINGS = {
   ArrowLeft: 'moveLeft',
   ArrowRight: 'moveRight',

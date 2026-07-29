@@ -1,9 +1,28 @@
 import { BOARD_WIDTH, BOARD_HEIGHT, EMPTY } from './constants'
+import { PIECE_TYPES } from './tetrominoes'
 
 export function createEmptyBoard() {
   return Array.from({ length: BOARD_HEIGHT }, () =>
     Array(BOARD_WIDTH).fill(EMPTY),
   )
+}
+
+/** 바닥(맨 아래 줄) 빈 칸 중 하나에 랜덤 색 1칸 배치 */
+export function placeRandomBottomMino(board) {
+  const newBoard = board.map((row) => [...row])
+  const row = BOARD_HEIGHT - 1
+  const emptyCols = []
+
+  for (let col = 0; col < BOARD_WIDTH; col++) {
+    if (newBoard[row][col] === EMPTY) emptyCols.push(col)
+  }
+
+  if (emptyCols.length === 0) return newBoard
+
+  const col = emptyCols[Math.floor(Math.random() * emptyCols.length)]
+  const type = PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)]
+  newBoard[row][col] = type
+  return newBoard
 }
 
 export function isValidPosition(board, shape, position) {

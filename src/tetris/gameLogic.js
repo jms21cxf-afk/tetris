@@ -3,6 +3,8 @@ import {
   SCORE_TABLE,
   LINES_PER_LEVEL,
   BASE_DROP_INTERVAL,
+  GARBAGE_MINO_FROM_LEVEL,
+  DEV_START_LEVEL,
 } from './constants'
 import { TETROMINOES, PIECE_TYPES } from './tetrominoes'
 import {
@@ -10,7 +12,18 @@ import {
   isValidPosition,
   mergePiece,
   clearLines,
+  placeRandomBottomMino,
 } from './board'
+
+function resolveDevStartLevel() {
+  if (!import.meta.env.DEV) return 0
+  const fromUrl = new URLSearchParams(window.location.search).get('devLevel')
+  if (fromUrl != null && fromUrl !== '') {
+    const n = Number(fromUrl)
+    return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 0
+  }
+  return DEV_START_LEVEL > 0 ? Math.floor(DEV_START_LEVEL) : 0
+}
 
 export function randomPieceType() {
   return PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)]
@@ -120,18 +133,34 @@ export function createMenuState() {
 export function beginGame() {
   const first = createPiece(randomPieceType())
   const next = createPiece(randomPieceType())
+  const devLevel = resolveDevStartLevel()
+  const startLevel = devLevel > 0 ? devLevel : 1
+  const startLines = (startLevel - 1) * LINES_PER_LEVEL
+
+  let board = createEmptyBoard()
+  if (startLevel >= GARBAGE_MINO_FROM_LEVEL) {
+    board = placeRandomBottomMino(board)
+  }
 
   return {
-    board: createEmptyBoard(),
+    board,
     currentPiece: first,
     nextPiece: next,
     score: 0,
-    level: 1,
-    lines: 0,
+    level: startLevel,
+    lines: startLines,
     gameOver: false,
     isPaused: false,
     isPlaying: true,
   }
+}
+
+/** 레벨 4 진입 시 바닥에 1칸 추가 */
+export function applyLevelUpBoardEffects(state, prevLevel, newLevel) {
+  if (newLevel >= GARBAGE_MINO_FROM_LEVEL && prevLevel < GARBAGE_MINO_FROM_LEVEL) {
+    return { ...state, board: placeRandomBottomMino(state.board) }
+  }
+  return state
 }
 
 export function spawnNextPiece(state) {

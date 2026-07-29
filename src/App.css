@@ -613,7 +613,7 @@
   }
 
   .app.mobile {
-    --touch-height: 7.5rem;
+    --touch-height: 9.25rem;
     --header-height: 2.25rem;
     --title-height: 2rem;
     --menu-extras-height: 7rem;
@@ -701,9 +701,9 @@
   }
 
   .app.mobile .touch-btn {
-    height: 2.75rem;
+    height: 3.5rem;
     max-width: none;
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     border-radius: 10px;
   }
 
@@ -769,7 +769,7 @@
 
 @media (max-width: 380px) {
   .app.mobile {
-    --touch-height: 7rem;
+    --touch-height: 8.75rem;
   }
 
   .app {
@@ -777,7 +777,7 @@
   }
 
   .touch-btn {
-    height: 2.5rem;
-    font-size: 1.05rem;
+    height: 3.25rem;
+    font-size: 1.1rem;
   }
 }

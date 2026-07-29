@@ -12,6 +12,7 @@ import {
   lockPiece,
   spawnNextPiece,
   applyLineClear,
+  applyLevelUpBoardEffects,
   getDropInterval,
 } from './gameLogic'
 
@@ -92,6 +93,9 @@ export function useTetris({ onScoreRecord } = {}) {
     if (linesCleared > 0) {
       const prevLevel = state.level
       nextState = applyLineClear(nextState, linesCleared)
+      if (nextState.level > prevLevel) {
+        nextState = applyLevelUpBoardEffects(nextState, prevLevel, nextState.level)
+      }
       // 레벨 업 연출은 줄 클리어 직후에 띄움(useEffect보다 모바일에서 안정적)
       if (nextState.level > prevLevel) {
         sounds.levelUp()
