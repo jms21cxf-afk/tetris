@@ -667,7 +667,7 @@
 
   .mobile-best-line {
     margin-top: 0.2rem;
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     color: #f0a000;
     font-weight: 600;
   }
@@ -726,11 +726,11 @@
 
   .game-info.compact .stat-label {
     margin-bottom: 0;
-    font-size: 0.62rem;
+    font-size: 0.7rem;
   }
 
   .game-info.compact .stat-value {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
   }
 
   .next-piece.compact .next-label {

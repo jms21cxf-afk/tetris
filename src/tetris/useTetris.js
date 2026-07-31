@@ -13,6 +13,9 @@ import {
   spawnNextPiece,
   applyLineClear,
   applyLevelUpBoardEffects,
+  spawnMidPiece,
+  hasMidSpawn,
+  getMidSpawnDelay,
   getDropInterval,
 } from './gameLogic'
 
@@ -29,6 +32,7 @@ export function useTetris({ onScoreRecord } = {}) {
   const prevGameOverRef = useRef(false)
   const flashTimerRef = useRef(null)
   const levelFlashTimerRef = useRef(null)
+  const midSpawnTimerRef = useRef(null)
   const [flashEvent, setFlashEvent] = useState(null)
 
   const showFlash = useCallback((event) => {
@@ -47,6 +51,7 @@ export function useTetris({ onScoreRecord } = {}) {
     return () => {
       if (flashTimerRef.current) clearTimeout(flashTimerRef.current)
       if (levelFlashTimerRef.current) clearTimeout(levelFlashTimerRef.current)
+      if (midSpawnTimerRef.current) clearTimeout(midSpawnTimerRef.current)
     }
   }, [])
 
@@ -290,6 +295,60 @@ export function useTetris({ onScoreRecord } = {}) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
+
+  useEffect(() => {
+    const { level, isPlaying, isPaused, gameOver } = gameState
+
+    if (!hasMidSpawn(level) || !isPlaying || isPaused || gameOver) {
+      if (midSpawnTimerRef.current) {
+        clearTimeout(midSpawnTimerRef.current)
+        midSpawnTimerRef.current = null
+      }
+      return
+    }
+
+    let cancelled = false
+
+    const scheduleNext = () => {
+      if (cancelled) return
+
+      const current = gameStateRef.current
+      if (
+        !hasMidSpawn(current.level) ||
+        !current.isPlaying ||
+        current.isPaused ||
+        current.gameOver
+      ) {
+        return
+      }
+
+      if (midSpawnTimerRef.current) {
+        clearTimeout(midSpawnTimerRef.current)
+        midSpawnTimerRef.current = null
+      }
+
+      const { min, max } = getMidSpawnDelay(current.level)
+      const delay = min + Math.random() * (max - min)
+
+      midSpawnTimerRef.current = setTimeout(() => {
+        midSpawnTimerRef.current = null
+        if (cancelled) return
+
+        setGameState((prev) => spawnMidPiece(prev))
+        scheduleNext()
+      }, delay)
+    }
+
+    scheduleNext()
+
+    return () => {
+      cancelled = true
+      if (midSpawnTimerRef.current) {
+        clearTimeout(midSpawnTimerRef.current)
+        midSpawnTimerRef.current = null
+      }
+    }
+  }, [gameState.level, gameState.isPlaying, gameState.isPaused, gameState.gameOver])
 
   useEffect(() => {
     if (!gameState.isPlaying || gameState.isPaused || gameState.gameOver) {

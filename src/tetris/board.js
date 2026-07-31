@@ -1,5 +1,5 @@
-import { BOARD_WIDTH, BOARD_HEIGHT, EMPTY } from './constants'
-import { PIECE_TYPES } from './tetrominoes'
+import { BOARD_WIDTH, BOARD_HEIGHT, EMPTY, GROUND_CELL } from './constants'
+import { PIECE_TYPES, TETROMINOES } from './tetrominoes'
 
 export function createEmptyBoard() {
   return Array.from({ length: BOARD_HEIGHT }, () =>
@@ -7,22 +7,69 @@ export function createEmptyBoard() {
   )
 }
 
-/** 바닥(맨 아래 줄) 빈 칸 중 하나에 랜덤 색 1칸 배치 */
-export function placeRandomBottomMino(board) {
-  const newBoard = board.map((row) => [...row])
-  const row = BOARD_HEIGHT - 1
-  const emptyCols = []
+function dropPieceToBottom(board, shape, col) {
+  let row = -4
+  while (isValidPosition(board, shape, { row: row + 1, col })) {
+    row++
+  }
+  return row
+}
 
-  for (let col = 0; col < BOARD_WIDTH; col++) {
-    if (newBoard[row][col] === EMPTY) emptyCols.push(col)
+function pieceHasVisibleCell(shape, position) {
+  for (let row = 0; row < shape.length; row++) {
+    for (let col = 0; col < shape[row].length; col++) {
+      if (!shape[row][col]) continue
+      const boardRow = position.row + row
+      if (boardRow >= 0 && boardRow < BOARD_HEIGHT) return true
+    }
+  }
+  return false
+}
+
+function collectValidPlacements(board) {
+  const placements = []
+
+  for (const type of PIECE_TYPES) {
+    const { shapes } = TETROMINOES[type]
+    for (let rotation = 0; rotation < shapes.length; rotation++) {
+      const shape = shapes[rotation]
+      for (let col = -3; col < BOARD_WIDTH; col++) {
+        const position = { row: dropPieceToBottom(board, shape, col), col }
+        if (!isValidPosition(board, shape, position)) continue
+        if (!pieceHasVisibleCell(shape, position)) continue
+        placements.push({ type, shape, position })
+      }
+    }
   }
 
-  if (emptyCols.length === 0) return newBoard
+  return placements
+}
 
-  const col = emptyCols[Math.floor(Math.random() * emptyCols.length)]
-  const type = PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)]
-  newBoard[row][col] = type
+function pickRandomPlacement(placements) {
+  return placements[Math.floor(Math.random() * placements.length)]
+}
+
+/** 맨 아래 N줄을 땅처럼 채움 */
+export function applyRaisedGround(board, rows = 1) {
+  const newBoard = board.map((row) => [...row])
+
+  for (let i = 0; i < rows; i++) {
+    const row = BOARD_HEIGHT - 1 - i
+    for (let col = 0; col < BOARD_WIDTH; col++) {
+      newBoard[row][col] = GROUND_CELL
+    }
+  }
+
   return newBoard
+}
+
+/** 바닥에 랜덤 테트로미노 1개를 위에서 떨어뜨린 것처럼 배치 */
+export function placeRandomBottomMino(board) {
+  const placements = collectValidPlacements(board)
+  if (placements.length === 0) return board.map((row) => [...row])
+
+  const pick = pickRandomPlacement(placements)
+  return mergePiece(board, pick)
 }
 
 export function isValidPosition(board, shape, position) {
@@ -65,8 +112,14 @@ export function mergePiece(board, piece) {
   return newBoard
 }
 
+function isGroundRow(row) {
+  return row.every((cell) => cell === GROUND_CELL)
+}
+
 export function clearLines(board) {
-  const remaining = board.filter((row) => row.some((cell) => cell === EMPTY))
+  const remaining = board.filter(
+    (row) => row.some((cell) => cell === EMPTY) || isGroundRow(row),
+  )
   const linesCleared = BOARD_HEIGHT - remaining.length
 
   while (remaining.length < BOARD_HEIGHT) {

@@ -4,6 +4,16 @@ import {
   LINES_PER_LEVEL,
   BASE_DROP_INTERVAL,
   GARBAGE_MINO_FROM_LEVEL,
+  MID_SPAWN_FROM_LEVEL,
+  MID_SPAWN_TO_LEVEL,
+  MID_SPAWN_MIN_DELAY_MS,
+  MID_SPAWN_MAX_DELAY_MS,
+  MID_SPAWN_LEVEL7_MIN_DELAY_MS,
+  MID_SPAWN_LEVEL7_MAX_DELAY_MS,
+  MID_SPAWN_LEVEL8_MIN_DELAY_MS,
+  MID_SPAWN_LEVEL8_MAX_DELAY_MS,
+  RAISED_GROUND_FROM_LEVEL,
+  RAISED_GROUND_ROWS_BY_LEVEL,
   DEV_START_LEVEL,
 } from './constants'
 import { TETROMINOES, PIECE_TYPES } from './tetrominoes'
@@ -13,7 +23,38 @@ import {
   mergePiece,
   clearLines,
   placeRandomBottomMino,
+  applyRaisedGround,
 } from './board'
+
+export function hasMidSpawn(level) {
+  return level >= MID_SPAWN_FROM_LEVEL && level <= MID_SPAWN_TO_LEVEL
+}
+
+export function getMidSpawnDelay(level) {
+  if (level >= 8) {
+    return {
+      min: MID_SPAWN_LEVEL8_MIN_DELAY_MS,
+      max: MID_SPAWN_LEVEL8_MAX_DELAY_MS,
+    }
+  }
+  if (level >= 7) {
+    return {
+      min: MID_SPAWN_LEVEL7_MIN_DELAY_MS,
+      max: MID_SPAWN_LEVEL7_MAX_DELAY_MS,
+    }
+  }
+  return {
+    min: MID_SPAWN_MIN_DELAY_MS,
+    max: MID_SPAWN_MAX_DELAY_MS,
+  }
+}
+
+export function getRaisedGroundRows(level) {
+  if (level >= 8) return RAISED_GROUND_ROWS_BY_LEVEL[8]
+  if (level >= 7) return RAISED_GROUND_ROWS_BY_LEVEL[7]
+  if (level >= RAISED_GROUND_FROM_LEVEL) return RAISED_GROUND_ROWS_BY_LEVEL[6]
+  return 0
+}
 
 function resolveDevStartLevel() {
   if (!import.meta.env.DEV) return 0
@@ -130,17 +171,28 @@ export function createMenuState() {
   }
 }
 
+function applyLevelStartBoard(startLevel) {
+  let board = createEmptyBoard()
+
+  if (startLevel === GARBAGE_MINO_FROM_LEVEL) {
+    board = placeRandomBottomMino(board)
+  } else {
+    const groundRows = getRaisedGroundRows(startLevel)
+    if (groundRows > 0) {
+      board = applyRaisedGround(board, groundRows)
+    }
+  }
+
+  return { board }
+}
+
 export function beginGame() {
   const first = createPiece(randomPieceType())
   const next = createPiece(randomPieceType())
   const devLevel = resolveDevStartLevel()
   const startLevel = devLevel > 0 ? devLevel : 1
   const startLines = (startLevel - 1) * LINES_PER_LEVEL
-
-  let board = createEmptyBoard()
-  if (startLevel >= GARBAGE_MINO_FROM_LEVEL) {
-    board = placeRandomBottomMino(board)
-  }
+  const { board } = applyLevelStartBoard(startLevel)
 
   return {
     board,
@@ -155,12 +207,30 @@ export function beginGame() {
   }
 }
 
-/** 레벨 4 진입 시 바닥에 1칸 추가 */
+/** 레벨 4+ 진입 시 보드 초기화 (4: 바닥 블록, 5~8: 랜덤 스폰, 6~8: 땅 1~3줄) */
 export function applyLevelUpBoardEffects(state, prevLevel, newLevel) {
-  if (newLevel >= GARBAGE_MINO_FROM_LEVEL && prevLevel < GARBAGE_MINO_FROM_LEVEL) {
-    return { ...state, board: placeRandomBottomMino(state.board) }
+  if (newLevel <= prevLevel || newLevel < GARBAGE_MINO_FROM_LEVEL) {
+    return state
   }
-  return state
+
+  const { board } = applyLevelStartBoard(newLevel)
+  return { ...state, board }
+}
+
+export function spawnMidPiece(state) {
+  if (
+    !hasMidSpawn(state.level) ||
+    !state.isPlaying ||
+    state.isPaused ||
+    state.gameOver
+  ) {
+    return state
+  }
+
+  return {
+    ...state,
+    board: placeRandomBottomMino(state.board),
+  }
 }
 
 export function spawnNextPiece(state) {
