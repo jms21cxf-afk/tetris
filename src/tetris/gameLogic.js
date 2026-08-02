@@ -52,17 +52,18 @@ export function getMidSpawnDelay(level) {
 export function getRaisedGroundRows(level) {
   if (level >= 8) return RAISED_GROUND_ROWS_BY_LEVEL[8]
   if (level >= 7) return RAISED_GROUND_ROWS_BY_LEVEL[7]
-  if (level >= RAISED_GROUND_FROM_LEVEL) return RAISED_GROUND_ROWS_BY_LEVEL[6]
+  if (level >= 6) return RAISED_GROUND_ROWS_BY_LEVEL[6]
+  if (level >= RAISED_GROUND_FROM_LEVEL) return RAISED_GROUND_ROWS_BY_LEVEL[4]
   return 0
 }
 
 function resolveDevStartLevel() {
-  if (!import.meta.env.DEV) return 0
   const fromUrl = new URLSearchParams(window.location.search).get('devLevel')
   if (fromUrl != null && fromUrl !== '') {
     const n = Number(fromUrl)
     return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 0
   }
+  if (!import.meta.env.DEV) return 0
   return DEV_START_LEVEL > 0 ? Math.floor(DEV_START_LEVEL) : 0
 }
 
@@ -173,14 +174,10 @@ export function createMenuState() {
 
 function applyLevelStartBoard(startLevel) {
   let board = createEmptyBoard()
+  const groundRows = getRaisedGroundRows(startLevel)
 
-  if (startLevel === GARBAGE_MINO_FROM_LEVEL) {
-    board = placeRandomBottomMino(board)
-  } else {
-    const groundRows = getRaisedGroundRows(startLevel)
-    if (groundRows > 0) {
-      board = applyRaisedGround(board, groundRows)
-    }
+  if (groundRows > 0) {
+    board = applyRaisedGround(board, groundRows)
   }
 
   return { board }
@@ -207,7 +204,7 @@ export function beginGame() {
   }
 }
 
-/** 레벨 4+ 진입 시 보드 초기화 (4: 바닥 블록, 5~8: 랜덤 스폰, 6~8: 땅 1~3줄) */
+/** 레벨 4+ 진입 시 보드 초기화 (4~5: 땅 1줄, 6: 2줄, 7: 3줄, 8: 4줄, 5~8: 랜덤 스폰) */
 export function applyLevelUpBoardEffects(state, prevLevel, newLevel) {
   if (newLevel <= prevLevel || newLevel < GARBAGE_MINO_FROM_LEVEL) {
     return state
