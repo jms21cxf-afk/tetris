@@ -102,6 +102,14 @@ export const sounds = {
     })
   },
 
+  /** 레벨 7 클리어 춤 — 코로베이니키 느낌의 짧은 멜로디 */
+  level7Dance() {
+    const melody = [659, 587, 523, 587, 659, 784, 880, 784, 659, 587, 523, 440]
+    melody.forEach((note, i) => {
+      playTone(note, 0.11, 'square', 0.09, i * 0.11)
+    })
+  },
+
   gameOver() {
     playTone(220, 0.15, 'triangle', 0.1)
     playTone(165, 0.15, 'triangle', 0.1, 0.15)

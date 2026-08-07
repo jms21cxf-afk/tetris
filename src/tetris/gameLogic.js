@@ -169,6 +169,7 @@ export function createMenuState() {
     gameOver: false,
     isPaused: false,
     isPlaying: false,
+    isCelebrating: false,
   }
 }
 
@@ -201,6 +202,7 @@ export function beginGame() {
     gameOver: false,
     isPaused: false,
     isPlaying: true,
+    isCelebrating: false,
   }
 }
 
@@ -219,7 +221,8 @@ export function spawnMidPiece(state) {
     !hasMidSpawn(state.level) ||
     !state.isPlaying ||
     state.isPaused ||
-    state.gameOver
+    state.gameOver ||
+    state.isCelebrating
   ) {
     return state
   }

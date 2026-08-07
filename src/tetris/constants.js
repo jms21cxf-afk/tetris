@@ -50,6 +50,9 @@ export const RAISED_GROUND_ROWS_BY_LEVEL = {
   8: 4,
 }
 
+/** 레벨 7→8: 5줄 달성 시 오락실식 춤 연출 시간(ms) */
+export const LEVEL7_DANCE_DURATION_MS = 1800
+
 /** 개발·배포 공통: ?devLevel=4 로 레벨 바로 시작 (로컬 env는 DEV에서만) */
 export const DEV_START_LEVEL = Number(import.meta.env.VITE_DEV_START_LEVEL) || 0
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { KEY_BINDINGS } from './constants'
+import { KEY_BINDINGS, LEVEL7_DANCE_DURATION_MS } from './constants'
 import { getGhostPosition } from './board'
 import { initAudio, sounds, toggleMuted, setMuted } from './sounds'
 import { loadHighScore, saveHighScore, loadMuted } from './storage'
@@ -33,7 +33,9 @@ export function useTetris({ onScoreRecord } = {}) {
   const flashTimerRef = useRef(null)
   const levelFlashTimerRef = useRef(null)
   const midSpawnTimerRef = useRef(null)
+  const danceTimerRef = useRef(null)
   const [flashEvent, setFlashEvent] = useState(null)
+  const [danceEvent, setDanceEvent] = useState(null)
 
   const showFlash = useCallback((event) => {
     if (flashTimerRef.current) {
@@ -52,6 +54,7 @@ export function useTetris({ onScoreRecord } = {}) {
       if (flashTimerRef.current) clearTimeout(flashTimerRef.current)
       if (levelFlashTimerRef.current) clearTimeout(levelFlashTimerRef.current)
       if (midSpawnTimerRef.current) clearTimeout(midSpawnTimerRef.current)
+      if (danceTimerRef.current) clearTimeout(danceTimerRef.current)
     }
   }, [])
 
@@ -98,9 +101,18 @@ export function useTetris({ onScoreRecord } = {}) {
     if (linesCleared > 0) {
       const prevLevel = state.level
       nextState = applyLineClear(nextState, linesCleared)
-      if (nextState.level > prevLevel) {
+      const isLevel7To8 = prevLevel === 7 && nextState.level === 8
+
+      if (nextState.level > prevLevel && !isLevel7To8) {
         nextState = applyLevelUpBoardEffects(nextState, prevLevel, nextState.level)
       }
+
+      // 레벨 7→8: 5줄 달성 시 춤 연출 후 보드 리셋·레벨8
+      if (isLevel7To8) {
+        nextState = { ...nextState, isCelebrating: true, currentPiece: null }
+        return nextState
+      }
+
       // 레벨 업 연출은 줄 클리어 직후에 띄움(useEffect보다 모바일에서 안정적)
       if (nextState.level > prevLevel) {
         sounds.levelUp()
@@ -123,7 +135,13 @@ export function useTetris({ onScoreRecord } = {}) {
 
   const tick = useCallback(() => {
     setGameState((prev) => {
-      if (!prev.isPlaying || prev.isPaused || prev.gameOver || !prev.currentPiece) {
+      if (
+        !prev.isPlaying ||
+        prev.isPaused ||
+        prev.gameOver ||
+        prev.isCelebrating ||
+        !prev.currentPiece
+      ) {
         return prev
       }
 
@@ -138,7 +156,13 @@ export function useTetris({ onScoreRecord } = {}) {
 
   const moveLeft = useCallback(() => {
     setGameState((prev) => {
-      if (!prev.isPlaying || prev.isPaused || prev.gameOver || !prev.currentPiece) {
+      if (
+        !prev.isPlaying ||
+        prev.isPaused ||
+        prev.gameOver ||
+        prev.isCelebrating ||
+        !prev.currentPiece
+      ) {
         return prev
       }
       const moved = tryMove(prev.board, prev.currentPiece, 0, -1)
@@ -152,7 +176,13 @@ export function useTetris({ onScoreRecord } = {}) {
 
   const moveRight = useCallback(() => {
     setGameState((prev) => {
-      if (!prev.isPlaying || prev.isPaused || prev.gameOver || !prev.currentPiece) {
+      if (
+        !prev.isPlaying ||
+        prev.isPaused ||
+        prev.gameOver ||
+        prev.isCelebrating ||
+        !prev.currentPiece
+      ) {
         return prev
       }
       const moved = tryMove(prev.board, prev.currentPiece, 0, 1)
@@ -166,7 +196,13 @@ export function useTetris({ onScoreRecord } = {}) {
 
   const softDrop = useCallback(() => {
     setGameState((prev) => {
-      if (!prev.isPlaying || prev.isPaused || prev.gameOver || !prev.currentPiece) {
+      if (
+        !prev.isPlaying ||
+        prev.isPaused ||
+        prev.gameOver ||
+        prev.isCelebrating ||
+        !prev.currentPiece
+      ) {
         return prev
       }
 
@@ -182,7 +218,13 @@ export function useTetris({ onScoreRecord } = {}) {
 
   const rotate = useCallback(() => {
     setGameState((prev) => {
-      if (!prev.isPlaying || prev.isPaused || prev.gameOver || !prev.currentPiece) {
+      if (
+        !prev.isPlaying ||
+        prev.isPaused ||
+        prev.gameOver ||
+        prev.isCelebrating ||
+        !prev.currentPiece
+      ) {
         return prev
       }
       const rotated = tryRotate(prev.board, prev.currentPiece)
@@ -196,7 +238,13 @@ export function useTetris({ onScoreRecord } = {}) {
 
   const dropHard = useCallback(() => {
     setGameState((prev) => {
-      if (!prev.isPlaying || prev.isPaused || prev.gameOver || !prev.currentPiece) {
+      if (
+        !prev.isPlaying ||
+        prev.isPaused ||
+        prev.gameOver ||
+        prev.isCelebrating ||
+        !prev.currentPiece
+      ) {
         return prev
       }
 
@@ -246,6 +294,11 @@ export function useTetris({ onScoreRecord } = {}) {
       flushGlobalScore(score)
     }
 
+    if (danceTimerRef.current) {
+      clearTimeout(danceTimerRef.current)
+      danceTimerRef.current = null
+    }
+    setDanceEvent(null)
     prevGameOverRef.current = false
     setIsNewRecord(false)
     setGameState(createMenuState())
@@ -297,9 +350,36 @@ export function useTetris({ onScoreRecord } = {}) {
   }, [])
 
   useEffect(() => {
-    const { level, isPlaying, isPaused, gameOver } = gameState
+    if (!gameState.isCelebrating) return
 
-    if (!hasMidSpawn(level) || !isPlaying || isPaused || gameOver) {
+    setDanceEvent({ id: Date.now() })
+    sounds.level7Dance()
+
+    danceTimerRef.current = setTimeout(() => {
+      setGameState((prev) => {
+        if (!prev.isCelebrating) return prev
+        let next = applyLevelUpBoardEffects(prev, 7, 8)
+        next = spawnNextPiece({ ...next, isCelebrating: false })
+        return next
+      })
+      sounds.levelUp()
+      showFlash({ kind: 'level', level: 8 })
+      setDanceEvent(null)
+      danceTimerRef.current = null
+    }, LEVEL7_DANCE_DURATION_MS)
+
+    return () => {
+      if (danceTimerRef.current) {
+        clearTimeout(danceTimerRef.current)
+        danceTimerRef.current = null
+      }
+    }
+  }, [gameState.isCelebrating, showFlash])
+
+  useEffect(() => {
+    const { level, isPlaying, isPaused, gameOver, isCelebrating } = gameState
+
+    if (!hasMidSpawn(level) || !isPlaying || isPaused || gameOver || isCelebrating) {
       if (midSpawnTimerRef.current) {
         clearTimeout(midSpawnTimerRef.current)
         midSpawnTimerRef.current = null
@@ -317,7 +397,8 @@ export function useTetris({ onScoreRecord } = {}) {
         !hasMidSpawn(current.level) ||
         !current.isPlaying ||
         current.isPaused ||
-        current.gameOver
+        current.gameOver ||
+        current.isCelebrating
       ) {
         return
       }
@@ -348,16 +429,16 @@ export function useTetris({ onScoreRecord } = {}) {
         midSpawnTimerRef.current = null
       }
     }
-  }, [gameState.level, gameState.isPlaying, gameState.isPaused, gameState.gameOver])
+  }, [gameState.level, gameState.isPlaying, gameState.isPaused, gameState.gameOver, gameState.isCelebrating])
 
   useEffect(() => {
-    if (!gameState.isPlaying || gameState.isPaused || gameState.gameOver) {
+    if (!gameState.isPlaying || gameState.isPaused || gameState.gameOver || gameState.isCelebrating) {
       return
     }
 
     const interval = setInterval(tick, getDropInterval(gameState.level))
     return () => clearInterval(interval)
-  }, [gameState.isPlaying, gameState.isPaused, gameState.gameOver, gameState.level, tick])
+  }, [gameState.isPlaying, gameState.isPaused, gameState.gameOver, gameState.isCelebrating, gameState.level, tick])
 
   useEffect(() => {
     if (gameState.isPlaying && !gameState.gameOver && gameState.score > highScoreRef.current) {
@@ -401,5 +482,6 @@ export function useTetris({ onScoreRecord } = {}) {
     startGame,
     quitGame,
     flashEvent,
+    danceEvent,
   }
 }

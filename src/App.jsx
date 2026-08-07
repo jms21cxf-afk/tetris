@@ -11,6 +11,7 @@ import Controls from './components/Controls'
 import TouchControls from './components/TouchControls'
 import MuteButton from './components/MuteButton'
 import GameFlashOverlay from './components/GameFlashOverlay'
+import DancingCharacter from './components/DancingCharacter'
 import Fireworks from './components/Fireworks'
 import Leaderboard from './components/Leaderboard'
 import NicknameInput from './components/NicknameInput'
@@ -42,6 +43,7 @@ function App() {
     gameOver,
     isPaused,
     isPlaying,
+    isCelebrating,
     startGame,
     quitGame,
     moveLeft,
@@ -52,6 +54,7 @@ function App() {
     togglePause,
     toggleMute,
     flashEvent,
+    danceEvent,
   } = useTetris({ onScoreRecord: handleScoreRecord })
 
   const isMenu = !isPlaying && !gameOver
@@ -83,7 +86,7 @@ function App() {
     toggleMute()
   }
 
-  const showTouchControls = isPlaying && !gameOver
+  const showTouchControls = isPlaying && !gameOver && !isCelebrating
   const hasNickname = loadNickname().trim().length >= 2
 
   return (
@@ -164,6 +167,7 @@ function App() {
           />
 
           {!isMobile && <GameFlashOverlay event={flashEvent} />}
+          {!isMobile && <DancingCharacter event={danceEvent} />}
 
           {isMenu && (
             <div className="overlay menu">
@@ -240,6 +244,10 @@ function App() {
       {/* 모바일: 보드 밖 전체 화면에 팝업 (작은 보드·overflow에 가려지지 않도록) */}
       {isMobile && isPlaying && (
         <GameFlashOverlay event={flashEvent} fullscreen />
+      )}
+
+      {isMobile && isPlaying && (
+        <DancingCharacter event={danceEvent} fullscreen />
       )}
 
       {isMobile && showTouchControls && (
