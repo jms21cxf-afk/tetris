@@ -428,6 +428,30 @@
   margin-top: 1rem;
 }
 
+/* 메뉴 화면 — 상단 TETRIS와 중앙 로고 사이 인라인 춤 */
+.dance-inline {
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+  animation: dance-inline-in 0.4s ease forwards;
+}
+
+.dance-inline .dance-scene {
+  gap: 0.25rem;
+}
+
+@keyframes dance-inline-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .board {
   display: flex;
   flex-direction: column;
@@ -662,6 +686,14 @@
 
 .overlay.menu {
   background: rgba(0, 0, 0, 0.6);
+}
+
+.overlay.menu .dance-inline {
+  position: absolute;
+  top: clamp(0.5rem, 10%, 2rem);
+  left: 0;
+  right: 0;
+  margin-bottom: 0;
 }
 
 .overlay-actions {

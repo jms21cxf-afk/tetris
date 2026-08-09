@@ -15,8 +15,10 @@ import DancingCharacter from './components/DancingCharacter'
 import Fireworks from './components/Fireworks'
 import Leaderboard from './components/Leaderboard'
 import NicknameInput from './components/NicknameInput'
-import { initAudio } from './tetris/sounds'
+import { initAudio, startMenuDanceMusic, stopMenuDanceMusic } from './tetris/sounds'
 import './App.css'
+
+const MENU_DANCE_EVENT = { id: 'menu' }
 
 function App() {
   const isMobile = useIsMobile()
@@ -71,7 +73,38 @@ function App() {
     submitScoreRef.current = submitScore
   }, [submitScore])
 
+  // 메뉴 화면: 레벨7 춤 BGM 반복 (브라우저 정책상 첫 클릭/키 입력 후 재생)
+  useEffect(() => {
+    if (!isMenu || muted) {
+      stopMenuDanceMusic()
+      return
+    }
+
+    const tryStartMusic = () => {
+      initAudio()
+      startMenuDanceMusic()
+    }
+
+    tryStartMusic()
+
+    const onFirstInteraction = () => {
+      tryStartMusic()
+      window.removeEventListener('pointerdown', onFirstInteraction)
+      window.removeEventListener('keydown', onFirstInteraction)
+    }
+
+    window.addEventListener('pointerdown', onFirstInteraction)
+    window.addEventListener('keydown', onFirstInteraction)
+
+    return () => {
+      stopMenuDanceMusic()
+      window.removeEventListener('pointerdown', onFirstInteraction)
+      window.removeEventListener('keydown', onFirstInteraction)
+    }
+  }, [isMenu, muted])
+
   const handleStart = () => {
+    stopMenuDanceMusic()
     initAudio()
     startGame()
   }
@@ -171,6 +204,7 @@ function App() {
 
           {isMenu && (
             <div className="overlay menu">
+              <DancingCharacter event={MENU_DANCE_EVENT} menuMode />
               <p className="overlay-text menu-text">TETRIS</p>
               <p className="overlay-subtext menu-high-score">
                 내 최고기록 {formatHighScore(highScore)}

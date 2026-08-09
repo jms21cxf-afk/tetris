@@ -1,8 +1,10 @@
 /** 레벨 7 클리어 시 오락실식 춤추는 인형 연출 (NES 테트리스 스타일) */
-export default function DancingCharacter({ event, fullscreen = false }) {
+export default function DancingCharacter({ event, fullscreen = false, menuMode = false }) {
   if (!event) return null
 
-  const rootClass = `dance-overlay${fullscreen ? ' dance-overlay-fullscreen' : ''}`
+  const rootClass = menuMode
+    ? 'dance-inline'
+    : `dance-overlay${fullscreen ? ' dance-overlay-fullscreen' : ''}`
 
   return (
     <div key={event.id} className={rootClass} aria-live="polite">
@@ -28,7 +30,7 @@ export default function DancingCharacter({ event, fullscreen = false }) {
           </div>
         </div>
         <div className="dance-stage" />
-        <p className="dance-caption">STAGE CLEAR!</p>
+        {!menuMode && <p className="dance-caption">STAGE CLEAR!</p>}
       </div>
     </div>
   )

@@ -54,6 +54,30 @@ function playTone(frequency, duration, type = 'square', volume = 0.1, startTime 
   }
 }
 
+let menuDanceTimer = null
+
+/** 메뉴 화면 — level7 춤 멜로디 반복 재생 */
+export function startMenuDanceMusic() {
+  if (muted) return
+
+  stopMenuDanceMusic()
+
+  const playLoop = () => {
+    if (muted) return
+    sounds.level7Dance()
+    menuDanceTimer = setTimeout(playLoop, 1400)
+  }
+
+  playLoop()
+}
+
+export function stopMenuDanceMusic() {
+  if (menuDanceTimer) {
+    clearTimeout(menuDanceTimer)
+    menuDanceTimer = null
+  }
+}
+
 export const sounds = {
   move() {
     playTone(220, 0.04, 'square', 0.07)
