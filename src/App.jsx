@@ -115,6 +115,7 @@ function App() {
   }
 
   const handleToggleMute = () => {
+    stopMenuDanceMusic()
     initAudio()
     toggleMute()
   }

@@ -24,6 +24,9 @@ export function isMuted() {
 export function setMuted(value) {
   muted = value
   saveMuted(value)
+  if (value) {
+    stopMenuDanceMusic()
+  }
 }
 
 export function toggleMuted() {
@@ -54,28 +57,93 @@ function playTone(frequency, duration, type = 'square', volume = 0.1, startTime 
   }
 }
 
+const MENU_DANCE_MELODY = [659, 587, 523, 587, 659, 784, 880, 784, 659, 587, 523, 440]
+const MENU_NOTE_GAP = 0.11
+const MENU_NOTE_DURATION = 0.11
+const MENU_MELODY_DURATION_MS =
+  (MENU_DANCE_MELODY.length - 1) * MENU_NOTE_GAP * 1000 + MENU_NOTE_DURATION * 1000
+
 let menuDanceTimer = null
+let menuDanceActive = false
+const menuDanceNodes = new Set()
+
+function playMenuTone(frequency, duration, startTime) {
+  if (muted || !menuDanceActive) return
+
+  try {
+    const ctx = getContext()
+    const time = ctx.currentTime + startTime
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    const node = { osc, gain }
+
+    osc.type = 'square'
+    osc.frequency.value = frequency
+    gain.gain.setValueAtTime(0.09, time)
+    gain.gain.exponentialRampToValueAtTime(0.001, time + duration)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.onended = () => menuDanceNodes.delete(node)
+    menuDanceNodes.add(node)
+
+    osc.start(time)
+    osc.stop(time + duration)
+  } catch {
+    // 오디오 미지원 환경 무시
+  }
+}
+
+function playMenuDanceMelody() {
+  MENU_DANCE_MELODY.forEach((note, i) => {
+    playMenuTone(note, MENU_NOTE_DURATION, i * MENU_NOTE_GAP)
+  })
+}
+
+function scheduleMenuDanceLoop() {
+  if (!menuDanceActive || muted) return
+
+  playMenuDanceMelody()
+  menuDanceTimer = setTimeout(() => {
+    menuDanceTimer = null
+    scheduleMenuDanceLoop()
+  }, MENU_MELODY_DURATION_MS)
+}
 
 /** 메뉴 화면 — level7 춤 멜로디 반복 재생 */
 export function startMenuDanceMusic() {
   if (muted) return
 
   stopMenuDanceMusic()
-
-  const playLoop = () => {
-    if (muted) return
-    sounds.level7Dance()
-    menuDanceTimer = setTimeout(playLoop, 1400)
-  }
-
-  playLoop()
+  menuDanceActive = true
+  scheduleMenuDanceLoop()
 }
 
+/** 예약된 타이머·오실레이터를 즉시 중단 */
 export function stopMenuDanceMusic() {
+  menuDanceActive = false
+
   if (menuDanceTimer) {
     clearTimeout(menuDanceTimer)
     menuDanceTimer = null
   }
+
+  const ctx = getContext()
+  const now = ctx.currentTime
+
+  for (const { osc, gain } of menuDanceNodes) {
+    try {
+      gain.gain.cancelScheduledValues(now)
+      gain.gain.setValueAtTime(0, now)
+      osc.stop(now)
+      osc.disconnect()
+      gain.disconnect()
+    } catch {
+      // 이미 종료된 노드 무시
+    }
+  }
+
+  menuDanceNodes.clear()
 }
 
 export const sounds = {
@@ -128,9 +196,8 @@ export const sounds = {
 
   /** 레벨 7 클리어 춤 — 코로베이니키 느낌의 짧은 멜로디 */
   level7Dance() {
-    const melody = [659, 587, 523, 587, 659, 784, 880, 784, 659, 587, 523, 440]
-    melody.forEach((note, i) => {
-      playTone(note, 0.11, 'square', 0.09, i * 0.11)
+    MENU_DANCE_MELODY.forEach((note, i) => {
+      playTone(note, MENU_NOTE_DURATION, 'square', 0.09, i * MENU_NOTE_GAP)
     })
   },
 
