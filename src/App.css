@@ -173,6 +173,20 @@
   animation: dance-overlay-in 0.3s ease forwards;
 }
 
+.dance-overlay-rookie {
+  background: radial-gradient(
+    circle at 50% 70%,
+    rgba(0, 240, 240, 0.28) 0%,
+    rgba(15, 15, 26, 0.55) 60%,
+    rgba(15, 15, 26, 0.75) 100%
+  );
+}
+
+.dance-caption-rookie {
+  color: #00f0f0;
+  text-shadow: 0 0 12px rgba(0, 240, 240, 0.6);
+}
+
 .dance-overlay-fullscreen {
   position: fixed;
   inset: 0;
@@ -338,6 +352,135 @@
 .dancer-leg-right {
   right: 4px;
   animation: dancer-leg-right 0.35s ease-in-out infinite alternate;
+}
+
+/* ── 레벨 1→2 루키 인형 (좌우 셔플 + 팔 흔들기) ── */
+.dancer-rookie {
+  animation: dancer-rookie-shuffle 0.4s ease-in-out infinite alternate;
+}
+
+.dancer-cap {
+  position: absolute;
+  top: -4px;
+  left: -3px;
+  width: 26px;
+  height: 12px;
+  background: #00a0f0;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 2px 0 #0070b0;
+}
+
+.dancer-cap::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: -2px;
+  width: 30px;
+  height: 4px;
+  background: #0088d0;
+  border-radius: 2px;
+}
+
+.dancer-face-rookie {
+  background: #ffd4a8;
+  box-shadow: inset -2px 0 0 #e8b880;
+}
+
+.dancer-vest {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 8px;
+  background: #f0a000;
+  border-radius: 2px 2px 0 0;
+}
+
+.dancer-shirt-rookie {
+  background: #40c040;
+}
+
+.dancer-arm-rookie {
+  background: #ffd4a8;
+  height: 10px;
+  transform-origin: center bottom;
+}
+
+.dancer-arms-rookie {
+  top: 20px;
+  height: 28px;
+}
+
+.dancer-arm-rookie.dancer-arm-left {
+  left: 2px;
+  animation: dancer-rookie-arm-left 0.4s ease-in-out infinite alternate;
+}
+
+.dancer-arm-rookie.dancer-arm-right {
+  right: 2px;
+  animation: dancer-rookie-arm-right 0.4s ease-in-out infinite alternate;
+}
+
+.dancer-leg-rookie {
+  background: #603010;
+  height: 22px;
+}
+
+.dancer-legs-rookie {
+  top: 44px;
+}
+
+.dancer-leg-rookie.dancer-leg-left {
+  animation: dancer-rookie-leg-left 0.4s ease-in-out infinite alternate;
+}
+
+.dancer-leg-rookie.dancer-leg-right {
+  animation: dancer-rookie-leg-right 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes dancer-rookie-shuffle {
+  from {
+    transform: translateX(-5px) rotate(-3deg);
+  }
+  to {
+    transform: translateX(5px) rotate(3deg);
+  }
+}
+
+@keyframes dancer-rookie-arm-left {
+  from {
+    transform: rotate(-120deg);
+  }
+  to {
+    transform: rotate(-60deg);
+  }
+}
+
+@keyframes dancer-rookie-arm-right {
+  from {
+    transform: rotate(60deg);
+  }
+  to {
+    transform: rotate(120deg);
+  }
+}
+
+@keyframes dancer-rookie-leg-left {
+  from {
+    transform: rotate(-25deg);
+  }
+  to {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes dancer-rookie-leg-right {
+  from {
+    transform: rotate(10deg);
+  }
+  to {
+    transform: rotate(-25deg);
+  }
 }
 
 @keyframes dance-overlay-in {

@@ -18,7 +18,7 @@ import NicknameInput from './components/NicknameInput'
 import { initAudio, startMenuDanceMusic, stopMenuDanceMusic } from './tetris/sounds'
 import './App.css'
 
-const MENU_DANCE_EVENT = { id: 'menu' }
+const MENU_DANCE_EVENT = { id: 'menu', variant: 'classic' }
 
 function App() {
   const isMobile = useIsMobile()

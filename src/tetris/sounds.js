@@ -194,6 +194,14 @@ export const sounds = {
     })
   },
 
+  /** 레벨 1 클리어 춤 — 경쾌한 상승 멜로디 */
+  level1Dance() {
+    const melody = [392, 440, 494, 523, 587, 659, 587, 523, 494, 440]
+    melody.forEach((note, i) => {
+      playTone(note, 0.1, 'triangle', 0.1, i * 0.09)
+    })
+  },
+
   /** 레벨 7 클리어 춤 — 코로베이니키 느낌의 짧은 멜로디 */
   level7Dance() {
     MENU_DANCE_MELODY.forEach((note, i) => {

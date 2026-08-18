@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { KEY_BINDINGS, LEVEL7_DANCE_DURATION_MS } from './constants'
+import { KEY_BINDINGS, LEVEL1_DANCE_DURATION_MS, LEVEL7_DANCE_DURATION_MS } from './constants'
 import { getGhostPosition } from './board'
 import { initAudio, sounds, toggleMuted, setMuted } from './sounds'
 import { loadHighScore, saveHighScore, loadMuted } from './storage'
@@ -101,15 +101,22 @@ export function useTetris({ onScoreRecord } = {}) {
     if (linesCleared > 0) {
       const prevLevel = state.level
       nextState = applyLineClear(nextState, linesCleared)
+      const isLevel1To2 = prevLevel === 1 && nextState.level === 2
       const isLevel7To8 = prevLevel === 7 && nextState.level === 8
+      const isDanceLevelUp = isLevel1To2 || isLevel7To8
 
-      if (nextState.level > prevLevel && !isLevel7To8) {
+      if (nextState.level > prevLevel && !isDanceLevelUp) {
         nextState = applyLevelUpBoardEffects(nextState, prevLevel, nextState.level)
       }
 
-      // 레벨 7→8: 5줄 달성 시 춤 연출 후 보드 리셋·레벨8
-      if (isLevel7To8) {
-        nextState = { ...nextState, isCelebrating: true, currentPiece: null }
+      // 레벨 1→2 / 7→8: 춤 연출 후 다음 피스 스폰
+      if (isDanceLevelUp) {
+        nextState = {
+          ...nextState,
+          isCelebrating: true,
+          celebrationKind: isLevel1To2 ? 'level1' : 'level7',
+          currentPiece: null,
+        }
         return nextState
       }
 
@@ -350,23 +357,40 @@ export function useTetris({ onScoreRecord } = {}) {
   }, [])
 
   useEffect(() => {
-    if (!gameState.isCelebrating) return
+    if (!gameState.isCelebrating || !gameState.celebrationKind) return
 
-    setDanceEvent({ id: Date.now() })
-    sounds.level7Dance()
+    const kind = gameState.celebrationKind
+    const variant = kind === 'level1' ? 'rookie' : 'classic'
+    const targetLevel = kind === 'level1' ? 2 : 8
+    const duration =
+      kind === 'level1' ? LEVEL1_DANCE_DURATION_MS : LEVEL7_DANCE_DURATION_MS
+
+    setDanceEvent({ id: Date.now(), variant })
+
+    if (kind === 'level1') {
+      sounds.level1Dance()
+    } else {
+      sounds.level7Dance()
+    }
 
     danceTimerRef.current = setTimeout(() => {
       setGameState((prev) => {
-        if (!prev.isCelebrating) return prev
-        let next = applyLevelUpBoardEffects(prev, 7, 8)
-        next = spawnNextPiece({ ...next, isCelebrating: false })
+        if (!prev.isCelebrating || prev.celebrationKind !== kind) return prev
+
+        let next = { ...prev, isCelebrating: false, celebrationKind: null }
+
+        if (kind === 'level7') {
+          next = applyLevelUpBoardEffects(prev, 7, 8)
+        }
+
+        next = spawnNextPiece(next)
         return next
       })
       sounds.levelUp()
-      showFlash({ kind: 'level', level: 8 })
+      showFlash({ kind: 'level', level: targetLevel })
       setDanceEvent(null)
       danceTimerRef.current = null
-    }, LEVEL7_DANCE_DURATION_MS)
+    }, duration)
 
     return () => {
       if (danceTimerRef.current) {
@@ -374,7 +398,7 @@ export function useTetris({ onScoreRecord } = {}) {
         danceTimerRef.current = null
       }
     }
-  }, [gameState.isCelebrating, showFlash])
+  }, [gameState.isCelebrating, gameState.celebrationKind, showFlash])
 
   useEffect(() => {
     const { level, isPlaying, isPaused, gameOver, isCelebrating } = gameState

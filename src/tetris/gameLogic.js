@@ -170,6 +170,7 @@ export function createMenuState() {
     isPaused: false,
     isPlaying: false,
     isCelebrating: false,
+    celebrationKind: null,
   }
 }
 
@@ -203,6 +204,7 @@ export function beginGame() {
     isPaused: false,
     isPlaying: true,
     isCelebrating: false,
+    celebrationKind: null,
   }
 }
 
