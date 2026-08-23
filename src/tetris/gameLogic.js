@@ -12,6 +12,9 @@ import {
   MID_SPAWN_LEVEL7_MAX_DELAY_MS,
   MID_SPAWN_LEVEL8_MIN_DELAY_MS,
   MID_SPAWN_LEVEL8_MAX_DELAY_MS,
+  SINGLE_MINO_SPAWN_FROM_LEVEL,
+  SINGLE_MINO_SPAWN_MIN_DELAY_MS,
+  SINGLE_MINO_SPAWN_MAX_DELAY_MS,
   RAISED_GROUND_FROM_LEVEL,
   RAISED_GROUND_ROWS_BY_LEVEL,
   DEV_START_LEVEL,
@@ -23,11 +26,17 @@ import {
   mergePiece,
   clearLines,
   placeRandomBottomMino,
+  placeRandomSingleMino,
   applyRaisedGround,
 } from './board'
 
 export function hasMidSpawn(level) {
   return level >= MID_SPAWN_FROM_LEVEL && level <= MID_SPAWN_TO_LEVEL
+}
+
+/** 레벨 10+ 중간 1×1 블록 스폰 여부 */
+export function hasSingleMinoSpawn(level) {
+  return level >= SINGLE_MINO_SPAWN_FROM_LEVEL
 }
 
 export function getMidSpawnDelay(level) {
@@ -46,6 +55,13 @@ export function getMidSpawnDelay(level) {
   return {
     min: MID_SPAWN_MIN_DELAY_MS,
     max: MID_SPAWN_MAX_DELAY_MS,
+  }
+}
+
+export function getSingleMinoSpawnDelay() {
+  return {
+    min: SINGLE_MINO_SPAWN_MIN_DELAY_MS,
+    max: SINGLE_MINO_SPAWN_MAX_DELAY_MS,
   }
 }
 
@@ -182,6 +198,11 @@ function applyLevelStartBoard(startLevel) {
     board = applyRaisedGround(board, groundRows)
   }
 
+  // 레벨 9+ 시작: 바닥 4줄 위 플레이 영역에 1×1 블록 1개
+  if (startLevel >= 9) {
+    board = placeRandomSingleMino(board)
+  }
+
   return { board }
 }
 
@@ -208,7 +229,7 @@ export function beginGame() {
   }
 }
 
-/** 레벨 4+ 진입 시 보드 초기화 (4~5: 땅 1줄, 6: 2줄, 7: 3줄, 8: 4줄, 5~8: 랜덤 스폰) */
+/** 레벨 4+ 진입 시 보드 초기화 (8+: 4줄 땅, 9+: +1×1 랜덤) */
 export function applyLevelUpBoardEffects(state, prevLevel, newLevel) {
   if (newLevel <= prevLevel || newLevel < GARBAGE_MINO_FROM_LEVEL) {
     return state
@@ -232,6 +253,24 @@ export function spawnMidPiece(state) {
   return {
     ...state,
     board: placeRandomBottomMino(state.board),
+  }
+}
+
+/** 레벨 10+ 중간에 1×1 블록 1개 무작위 배치 */
+export function spawnSingleMino(state) {
+  if (
+    !hasSingleMinoSpawn(state.level) ||
+    !state.isPlaying ||
+    state.isPaused ||
+    state.gameOver ||
+    state.isCelebrating
+  ) {
+    return state
+  }
+
+  return {
+    ...state,
+    board: placeRandomSingleMino(state.board),
   }
 }
 

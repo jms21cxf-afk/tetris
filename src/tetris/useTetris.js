@@ -14,8 +14,11 @@ import {
   applyLineClear,
   applyLevelUpBoardEffects,
   spawnMidPiece,
+  spawnSingleMino,
   hasMidSpawn,
+  hasSingleMinoSpawn,
   getMidSpawnDelay,
+  getSingleMinoSpawnDelay,
   getDropInterval,
 } from './gameLogic'
 
@@ -33,7 +36,11 @@ export function useTetris({ onScoreRecord } = {}) {
   const flashTimerRef = useRef(null)
   const levelFlashTimerRef = useRef(null)
   const midSpawnTimerRef = useRef(null)
+  const singleMinoSpawnTimerRef = useRef(null)
   const danceTimerRef = useRef(null)
+  // Strict Mode에서 축하 effect가 두 번 돌아도 타이머·BGM이 중복되지 않게
+  const scheduledCelebrationRef = useRef(null)
+  const celebrationIdRef = useRef(0)
   const [flashEvent, setFlashEvent] = useState(null)
   const [danceEvent, setDanceEvent] = useState(null)
 
@@ -49,11 +56,17 @@ export function useTetris({ onScoreRecord } = {}) {
     }, 1600)
   }, [])
 
+  const showFlashRef = useRef(showFlash)
+  useEffect(() => {
+    showFlashRef.current = showFlash
+  }, [showFlash])
+
   useEffect(() => {
     return () => {
       if (flashTimerRef.current) clearTimeout(flashTimerRef.current)
       if (levelFlashTimerRef.current) clearTimeout(levelFlashTimerRef.current)
       if (midSpawnTimerRef.current) clearTimeout(midSpawnTimerRef.current)
+      if (singleMinoSpawnTimerRef.current) clearTimeout(singleMinoSpawnTimerRef.current)
       if (danceTimerRef.current) clearTimeout(danceTimerRef.current)
     }
   }, [])
@@ -305,6 +318,8 @@ export function useTetris({ onScoreRecord } = {}) {
       clearTimeout(danceTimerRef.current)
       danceTimerRef.current = null
     }
+    scheduledCelebrationRef.current = null
+    celebrationIdRef.current += 1
     setDanceEvent(null)
     prevGameOverRef.current = false
     setIsNewRecord(false)
@@ -357,13 +372,24 @@ export function useTetris({ onScoreRecord } = {}) {
   }, [])
 
   useEffect(() => {
-    if (!gameState.isCelebrating || !gameState.celebrationKind) return
+    if (!gameState.isCelebrating || !gameState.celebrationKind) {
+      scheduledCelebrationRef.current = null
+      return
+    }
 
     const kind = gameState.celebrationKind
+
+    // React Strict Mode: cleanup이 타이머를 지우므로, 두 번째 실행은 스킵하고 첫 타이머만 유지
+    if (scheduledCelebrationRef.current === kind) {
+      return
+    }
+    scheduledCelebrationRef.current = kind
+
     const variant = kind === 'level1' ? 'rookie' : 'classic'
     const targetLevel = kind === 'level1' ? 2 : 8
     const duration =
       kind === 'level1' ? LEVEL1_DANCE_DURATION_MS : LEVEL7_DANCE_DURATION_MS
+    const celebrationId = ++celebrationIdRef.current
 
     setDanceEvent({ id: Date.now(), variant })
 
@@ -374,31 +400,30 @@ export function useTetris({ onScoreRecord } = {}) {
     }
 
     danceTimerRef.current = setTimeout(() => {
+      if (celebrationIdRef.current !== celebrationId) return
+
       setGameState((prev) => {
         if (!prev.isCelebrating || prev.celebrationKind !== kind) return prev
 
         let next = { ...prev, isCelebrating: false, celebrationKind: null }
 
         if (kind === 'level7') {
-          next = applyLevelUpBoardEffects(prev, 7, 8)
+          // prev가 아닌 next 기준 — celebration 플래그가 다시 true로 덮이지 않게
+          next = applyLevelUpBoardEffects(next, 7, 8)
         }
 
         next = spawnNextPiece(next)
         return next
       })
       sounds.levelUp()
-      showFlash({ kind: 'level', level: targetLevel })
+      showFlashRef.current({ kind: 'level', level: targetLevel })
       setDanceEvent(null)
+      scheduledCelebrationRef.current = null
       danceTimerRef.current = null
     }, duration)
 
-    return () => {
-      if (danceTimerRef.current) {
-        clearTimeout(danceTimerRef.current)
-        danceTimerRef.current = null
-      }
-    }
-  }, [gameState.isCelebrating, gameState.celebrationKind, showFlash])
+    // cleanup에서 clearTimeout 하지 않음 — Strict Mode가 타이머를 취소해 레벨8에서 멈추는 원인
+  }, [gameState.isCelebrating, gameState.celebrationKind])
 
   useEffect(() => {
     const { level, isPlaying, isPaused, gameOver, isCelebrating } = gameState
@@ -451,6 +476,62 @@ export function useTetris({ onScoreRecord } = {}) {
       if (midSpawnTimerRef.current) {
         clearTimeout(midSpawnTimerRef.current)
         midSpawnTimerRef.current = null
+      }
+    }
+  }, [gameState.level, gameState.isPlaying, gameState.isPaused, gameState.gameOver, gameState.isCelebrating])
+
+  // 레벨 10+: 40~50초마다 1×1 블록 무작위 추가
+  useEffect(() => {
+    const { level, isPlaying, isPaused, gameOver, isCelebrating } = gameState
+
+    if (!hasSingleMinoSpawn(level) || !isPlaying || isPaused || gameOver || isCelebrating) {
+      if (singleMinoSpawnTimerRef.current) {
+        clearTimeout(singleMinoSpawnTimerRef.current)
+        singleMinoSpawnTimerRef.current = null
+      }
+      return
+    }
+
+    let cancelled = false
+
+    const scheduleNext = () => {
+      if (cancelled) return
+
+      const current = gameStateRef.current
+      if (
+        !hasSingleMinoSpawn(current.level) ||
+        !current.isPlaying ||
+        current.isPaused ||
+        current.gameOver ||
+        current.isCelebrating
+      ) {
+        return
+      }
+
+      if (singleMinoSpawnTimerRef.current) {
+        clearTimeout(singleMinoSpawnTimerRef.current)
+        singleMinoSpawnTimerRef.current = null
+      }
+
+      const { min, max } = getSingleMinoSpawnDelay()
+      const delay = min + Math.random() * (max - min)
+
+      singleMinoSpawnTimerRef.current = setTimeout(() => {
+        singleMinoSpawnTimerRef.current = null
+        if (cancelled) return
+
+        setGameState((prev) => spawnSingleMino(prev))
+        scheduleNext()
+      }, delay)
+    }
+
+    scheduleNext()
+
+    return () => {
+      cancelled = true
+      if (singleMinoSpawnTimerRef.current) {
+        clearTimeout(singleMinoSpawnTimerRef.current)
+        singleMinoSpawnTimerRef.current = null
       }
     }
   }, [gameState.level, gameState.isPlaying, gameState.isPaused, gameState.gameOver, gameState.isCelebrating])

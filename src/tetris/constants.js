@@ -41,6 +41,11 @@ export const MID_SPAWN_LEVEL7_MAX_DELAY_MS = 50000
 export const MID_SPAWN_LEVEL8_MIN_DELAY_MS = 30000
 export const MID_SPAWN_LEVEL8_MAX_DELAY_MS = 40000
 
+/** 레벨 10+: 40~50초마다 1×1 블록 무작위 추가 */
+export const SINGLE_MINO_SPAWN_FROM_LEVEL = 10
+export const SINGLE_MINO_SPAWN_MIN_DELAY_MS = 40000
+export const SINGLE_MINO_SPAWN_MAX_DELAY_MS = 50000
+
 /** 레벨 4+: 바닥 땅 줄 수 (4~5=1줄, 6=2줄, 7=3줄, 8=4줄) */
 export const RAISED_GROUND_FROM_LEVEL = 4
 export const RAISED_GROUND_ROWS_BY_LEVEL = {

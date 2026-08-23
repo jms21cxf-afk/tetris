@@ -72,6 +72,30 @@ export function placeRandomBottomMino(board) {
   return mergePiece(board, pick)
 }
 
+/** 플레이 영역(빈 칸) 중 무작위 위치에 1×1 블록 1개 배치 */
+export function placeRandomSingleMino(board) {
+  const emptyCells = []
+
+  for (let row = 0; row < BOARD_HEIGHT; row++) {
+    for (let col = 0; col < BOARD_WIDTH; col++) {
+      if (board[row][col] === EMPTY) {
+        emptyCells.push({ row, col })
+      }
+    }
+  }
+
+  if (emptyCells.length === 0) {
+    return board.map((row) => [...row])
+  }
+
+  const { row, col } =
+    emptyCells[Math.floor(Math.random() * emptyCells.length)]
+  const type = PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)]
+  const newBoard = board.map((r) => [...r])
+  newBoard[row][col] = type
+  return newBoard
+}
+
 export function isValidPosition(board, shape, position) {
   for (let row = 0; row < shape.length; row++) {
     for (let col = 0; col < shape[row].length; col++) {
