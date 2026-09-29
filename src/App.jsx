@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useTetris } from './tetris/useTetris'
 import { useIsMobile } from './hooks/useIsMobile'
-import { useLeaderboard } from './hooks/useLeaderboard'
 import { formatHighScore } from './tetris/formatScore'
-import { loadNickname } from './tetris/storage'
 import Board from './components/Board'
 import NextPiece from './components/NextPiece'
 import GameInfo from './components/GameInfo'
@@ -13,8 +11,6 @@ import MuteButton from './components/MuteButton'
 import GameFlashOverlay from './components/GameFlashOverlay'
 import DancingCharacter from './components/DancingCharacter'
 import Fireworks from './components/Fireworks'
-import Leaderboard from './components/Leaderboard'
-import NicknameInput from './components/NicknameInput'
 import { initAudio, startMenuDanceMusic, stopMenuDanceMusic } from './tetris/sounds'
 import './App.css'
 
@@ -22,14 +18,6 @@ const MENU_DANCE_EVENT = { id: 'menu', variant: 'classic' }
 
 function App() {
   const isMobile = useIsMobile()
-  const submitScoreRef = useRef(null)
-
-  const handleScoreRecord = useCallback((recordScore) => {
-    const nickname = loadNickname().trim()
-    if (nickname.length >= 2) {
-      submitScoreRef.current?.(nickname, recordScore)
-    }
-  }, [])
 
   const {
     board,
@@ -57,21 +45,9 @@ function App() {
     toggleMute,
     flashEvent,
     danceEvent,
-  } = useTetris({ onScoreRecord: handleScoreRecord })
+  } = useTetris()
 
   const isMenu = !isPlaying && !gameOver
-
-  const {
-    scores,
-    loading: leaderboardLoading,
-    unavailable: leaderboardUnavailable,
-    submitScore,
-    refresh: refreshLeaderboard,
-  } = useLeaderboard(isMenu || gameOver)
-
-  useEffect(() => {
-    submitScoreRef.current = submitScore
-  }, [submitScore])
 
   // 메뉴 화면: 레벨7 춤 BGM 반복 (브라우저 정책상 첫 클릭/키 입력 후 재생)
   useEffect(() => {
@@ -111,7 +87,6 @@ function App() {
 
   const handleQuit = () => {
     quitGame()
-    refreshLeaderboard()
   }
 
   const handleToggleMute = () => {
@@ -121,7 +96,6 @@ function App() {
   }
 
   const showTouchControls = isPlaying && !gameOver && !isCelebrating
-  const hasNickname = loadNickname().trim().length >= 2
 
   return (
     <div
@@ -135,18 +109,6 @@ function App() {
 
       {isMobile && isMenu && (
         <p className="mobile-high-score">내 최고기록 {formatHighScore(highScore)}</p>
-      )}
-
-      {isMobile && isMenu && (
-        <div className="mobile-menu-extras">
-          <NicknameInput compact />
-          <Leaderboard
-            scores={scores}
-            loading={leaderboardLoading}
-            unavailable={leaderboardUnavailable}
-            compact
-          />
-        </div>
       )}
 
       {isMobile && isPlaying && (
@@ -176,16 +138,6 @@ function App() {
               highScore={highScore}
               menuOnly={isMenu}
             />
-            {isMenu && (
-              <>
-                <NicknameInput />
-                <Leaderboard
-                  scores={scores}
-                  loading={leaderboardLoading}
-                  unavailable={leaderboardUnavailable}
-                />
-              </>
-            )}
           </aside>
         )}
 
@@ -225,9 +177,7 @@ function App() {
                   <p className="overlay-subtext record-score">
                     {score.toLocaleString()}점
                   </p>
-                  {hasNickname && (
-                    <p className="overlay-subtext">글로벌 랭킹에 등록됐어요!</p>
-                  )}
+                  <p className="overlay-subtext">기록은 이 기기에 저장돼요</p>
                 </>
               ) : (
                 <>

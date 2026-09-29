@@ -22,7 +22,7 @@ import {
   getDropInterval,
 } from './gameLogic'
 
-export function useTetris({ onScoreRecord } = {}) {
+export function useTetris() {
   const initialHighScore = loadHighScore()
   const [gameState, setGameState] = useState(createMenuState)
   const [highScore, setHighScore] = useState(initialHighScore)
@@ -31,7 +31,6 @@ export function useTetris({ onScoreRecord } = {}) {
   const gameStateRef = useRef(gameState)
   const highScoreRef = useRef(initialHighScore)
   const beatRecordThisGameRef = useRef(false)
-  const onScoreRecordRef = useRef(onScoreRecord)
   const prevGameOverRef = useRef(false)
   const flashTimerRef = useRef(null)
   const levelFlashTimerRef = useRef(null)
@@ -70,10 +69,6 @@ export function useTetris({ onScoreRecord } = {}) {
       if (danceTimerRef.current) clearTimeout(danceTimerRef.current)
     }
   }, [])
-
-  useEffect(() => {
-    onScoreRecordRef.current = onScoreRecord
-  }, [onScoreRecord])
 
   useEffect(() => {
     gameStateRef.current = gameState
@@ -300,18 +295,10 @@ export function useTetris({ onScoreRecord } = {}) {
     setGameState(beginGame())
   }, [])
 
-  const flushGlobalScore = useCallback((score) => {
-    if (beatRecordThisGameRef.current && score > 0) {
-      onScoreRecordRef.current?.(score)
-      beatRecordThisGameRef.current = false
-    }
-  }, [])
-
   const quitGame = useCallback(() => {
     const { score, isPlaying, gameOver } = gameStateRef.current
     if (isPlaying && !gameOver) {
       saveIfBest(score)
-      flushGlobalScore(score)
     }
 
     if (danceTimerRef.current) {
@@ -324,7 +311,7 @@ export function useTetris({ onScoreRecord } = {}) {
     prevGameOverRef.current = false
     setIsNewRecord(false)
     setGameState(createMenuState())
-  }, [saveIfBest, flushGlobalScore])
+  }, [saveIfBest])
 
   const actions = useRef({
     moveLeft,
@@ -558,13 +545,12 @@ export function useTetris({ onScoreRecord } = {}) {
       if (beatRecordThisGameRef.current) {
         setIsNewRecord(true)
         sounds.celebrate()
-        flushGlobalScore(gameState.score)
       } else {
         sounds.gameOver()
       }
     }
     prevGameOverRef.current = gameState.gameOver
-  }, [gameState.gameOver, gameState.score, saveIfBest, flushGlobalScore])
+  }, [gameState.gameOver, gameState.score, saveIfBest])
 
   const ghostPosition =
     gameState.currentPiece && !gameState.gameOver
